@@ -70,7 +70,8 @@ function LoginForm() {
         );
       }
       const next = params.get("next");
-      const target = next ?? (data.user?.role === "patient" ? "/" : "/staff");
+      const isStaffRole = data.user?.role === "clinician" || data.user?.role === "admin" || data.user?.role === "receptionist";
+      const target = (next && next !== "/") ? next : (isStaffRole ? "/staff" : "/");
       window.location.assign(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");

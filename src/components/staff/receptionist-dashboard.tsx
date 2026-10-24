@@ -314,11 +314,11 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
           {/* Footer */}
           <div className="mt-auto pt-6 text-xs text-cream/50">
             <a
-              href="/"
+              href="/?preview=patient"
               className="flex items-center gap-2 rounded-xl p-2 hover:bg-cream/10 text-cream/80 hover:text-cream transition-colors"
             >
               <ArrowRight className="h-3.5 w-3.5 rotate-180" />
-              <span>Patient Front Desk</span>
+              <span>Preview Patient Front Desk</span>
             </a>
           </div>
         </div>

@@ -1023,6 +1023,27 @@ export function PatientPortal({
       {/* 2. CHATGPT-MOOD MAIN WORKSPACE CANVAS                                 */}
       {/* --------------------------------------------------------------------- */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[#ffffff] relative overflow-hidden">
+        {/* Staff Preview Bar for Clinicians, Receptionists, and Admins */}
+        {currentUser && (currentUser.role === "clinician" || currentUser.role === "receptionist" || currentUser.role === "admin") && (
+          <div className="bg-[#11382b] text-white px-4 py-2 text-xs flex items-center justify-between border-b border-white/10 shrink-0 z-20">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#d49b35] text-[#11382b] px-2 py-0.5 font-bold uppercase tracking-wider text-[10px]">
+                {currentUser.role === "clinician" ? "Doctor Preview" : currentUser.role === "receptionist" ? "Reception Preview" : "Admin Preview"}
+              </span>
+              <span className="hidden sm:inline text-white/90">
+                You are previewing the Patient Front Desk as <span className="font-semibold text-white">{currentUser.name}</span>.
+              </span>
+            </div>
+            <a
+              href="/staff"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#d49b35] px-3.5 py-1 font-semibold text-[#11382b] hover:bg-[#e6b349] transition-all text-xs shadow-xs"
+            >
+              <span>Return to {currentUser.role === "clinician" ? "Doctor" : currentUser.role === "receptionist" ? "Reception" : "Admin"} Console</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+
         {/* TOP COMMAND BAR */}
         <header className="h-14 shrink-0 border-b border-[#e8eee6] px-4 sm:px-6 flex items-center justify-between gap-4 bg-[#fcfdfa]/90 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
