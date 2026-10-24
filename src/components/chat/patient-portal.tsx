@@ -1104,9 +1104,9 @@ export function PatientPortal({
             {(currentUser?.role === "clinician" || currentUser?.role === "receptionist" || currentUser?.role === "admin") && (
               <a
                 href="/staff"
-                className="hidden lg:inline-flex items-center gap-1 rounded-full bg-[#11382b] px-3 py-1 text-xs font-semibold text-white hover:bg-[#1a4a3a]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-3 py-1 text-xs font-semibold text-white hover:bg-[#1a4a3a] shadow-xs"
               >
-                <span>Console</span>
+                <span>Back to Console</span>
                 <ArrowUpRight className="h-3 w-3" />
               </a>
             )}

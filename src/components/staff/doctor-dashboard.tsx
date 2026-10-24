@@ -349,8 +349,8 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
           </div>
 
           <div className="flex items-center gap-3">
-            <a href="/" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
-              ← Patient View
+            <a href="/?preview=patient" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
+              ← Preview Patient Front Desk
             </a>
             <SignOutButton
               redirectTo="/login"

@@ -1,13 +1,27 @@
 import { db } from "@/db";
 import { clinicInfo, slots } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { getCurrentUser } from "@/lib/auth/service";
+import { getCurrentUser, isStaff } from "@/lib/auth/service";
 import { PatientPortal } from "@/components/chat/patient-portal";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams?: Promise<{ preview?: string }>;
+}
+
+export default async function HomePage(props: HomePageProps) {
   const user = await getCurrentUser();
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const isPreview = searchParams.preview === "patient" || searchParams.preview === "true";
+
+  // Role-Based Routing: Authenticated staff (clinician, receptionist, admin) belong in their
+  // dedicated staff workspace (/staff), unless explicitly previewing the patient-facing front desk.
+  if (isStaff(user) && !isPreview) {
+    redirect("/staff");
+  }
+
   const infoRows = await db.select().from(clinicInfo);
   const info = Object.fromEntries(infoRows.map((r) => [r.key, r.value]));
 
