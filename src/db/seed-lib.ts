@@ -17,6 +17,13 @@ import {
   visitRecords,
   invoices,
   notifications,
+  appointments,
+  reminders,
+  waitlist,
+  intakeSessions,
+  summaries,
+  sessions,
+  auditLogs,
 } from "./schema";
 import { hashPassword } from "../lib/auth/service";
 import { invalidateRuleCache } from "../lib/assistant/pipeline";
@@ -37,6 +44,25 @@ export interface SeedSummary {
 
 export async function runSeed(): Promise<SeedSummary> {
   const password = process.env.SEED_DEMO_PASSWORD ?? "demo1234";
+
+  // Wipe all prior test & transactional data in dependency order so only clean mock data remains
+  await db.delete(reminders);
+  await db.delete(invoices);
+  await db.delete(visitRecords);
+  await db.delete(appointments);
+  await db.delete(waitlist);
+  await db.delete(summaries);
+  await db.delete(intakeSessions);
+  await db.delete(notifications);
+  await db.delete(patientProfiles);
+  await db.delete(sessions);
+  await db.delete(auditLogs);
+  await db.delete(slots);
+  await db.delete(providers);
+  await db.delete(departments);
+  await db.delete(users);
+  await db.delete(faqs);
+  await db.delete(redFlagRules);
 
   const info: { key: string; value: string; approval: "approved" | "pending_owner_approval" }[] = [
     { key: "clinic_name", value: "Meridian Grove Clinic (synthetic demo)", approval: "approved" },

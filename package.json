@@ -6,7 +6,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:reset": "tsx -r dotenv/config src/db/seed.ts",
+    "db:seed": "tsx -r dotenv/config src/db/seed.ts"
   },
   "dependencies": {
     "dotenv": "17.3.1",

@@ -50,13 +50,14 @@
 npm install
 cp .env.example .env          # fill DATABASE_URL; AI_PROVIDER defaults to "mock"
 npx drizzle-kit push          # create tables
-npx tsx -r dotenv/config src/db/seed.ts  # populate synthetic demo data
+npm run db:reset              # delete test data & refresh with clean synthetic mock data
 npm run dev                   # start dev server on http://localhost:3000
 ```
 
 ### Verification & Testing
 
 ```bash
+npm run db:reset              # wipe test data & re-seed fresh mock data anytime
 npx vitest run                # 42 unit tests (pure logic, auth, booking, billing, safety)
 npx tsx scripts/run-eval.ts   # 44-case safety & accuracy evaluation benchmark suite
 npm run typecheck             # TypeScript strict check (zero errors)
