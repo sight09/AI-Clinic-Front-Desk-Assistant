@@ -114,6 +114,8 @@ Password = `SEED_DEMO_PASSWORD` (default `demo1234`).
 
 ## Documentation
 
+- `BROLF_TECH_INTERNSHIP_SUBMISSION.md` — **Master Internship Submission Dossier** mapping 1-to-1 to Brolf Tech PLC 2026 Challenge requirements
+- `docs/deployment.md` — Docker containerization, multi-environment setup, and cloud deployment procedures
 - `docs/project-scope.md` — Problem, roles, MVP, non-goals, and acceptance criteria
 - `docs/architecture.md` — System architecture, request pipeline, and trust boundaries
 - `docs/api-contracts.md` — REST API specifications, payloads, auth, and error formats

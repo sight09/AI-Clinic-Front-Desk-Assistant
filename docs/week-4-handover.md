@@ -20,7 +20,7 @@
 | Privacy/logging hygiene | guard + audit design | eval SEC-01…03 (3/3) |
 | Automation: mock reminders + consent waitlist | booking service | unit + manual flows |
 
-**Unit tests: 36/36. Evaluation suite: 44/44 (100%), 0 critical failures.** Commands in `docs/test-plan.md`.
+**Unit tests: 42/42. Evaluation suite: 44/44 (100%), 0 critical failures.** Commands in `docs/test-plan.md`.
 
 ## 3. API contracts
 
@@ -73,7 +73,7 @@ feat: AI Clinic Front-Desk Assistant — final submission
 - LLM provider wrapper (mock default, OpenAI-compatible live mode) with
   timeouts, bounded retries and safe error normalisation
 - Injection guards, role/ownership enforcement, minimal audit, log redaction
-- 36 unit tests + 44-case executed evaluation suite (100% pass, 0 critical)
+- 42 unit tests + 44-case executed evaluation suite (100% pass, 0 critical)
 - Full docs: scope, architecture, API contracts, prompts, safety & privacy,
   test plan, evaluation results, decisions
 ```

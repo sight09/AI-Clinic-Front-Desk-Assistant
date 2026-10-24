@@ -8,11 +8,12 @@ Everything here is reproducible. Commands and their latest results are below —
 npx vitest run
 ```
 
-**Latest result: 36/36 passed** (3 files).
+**Latest result: 42/42 passed** (4 files).
 
 | File | Covers |
 |---|---|
 | `tests/safety.test.ts` | red-flag matching (exact, synonyms, misspellings, indirect, benign-context, disclaimer), filler gaps, negation aborts, edit distance, injection flags, input limits, log redaction, rate limits |
+| `tests/clinic-features.test.ts` | staff authorization (receptionist & doctor roles), cross-patient privacy/ownership isolation, billing item summation, appointment lifecycle statuses, clinical visit records standards |
 | `tests/intake.test.ts` | extraction fidelity, missing-stays-missing, age-band policy, strict schema rejection, provider failure fallback, malformed JSON, DRAFT labelling, FAQ grounding + fallback |
 | `tests/booking.test.ts` | pure booking decisions (open/booked/past/missing), waitlist offer transitions (valid/expired/slot-gone/wrong-state), role guards, ownership |
 
