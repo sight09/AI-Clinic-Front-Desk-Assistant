@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getCurrentUser, hashPassword, requireRole } from "@/lib/auth/service";
 import { db } from "@/db";
-import { auditLogs, departments, providers, users } from "@/db/schema";
+import { auditLogs, departments, patientProfiles, providers, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { AppError, toSafeErrorPayload } from "@/lib/errors";
 
@@ -114,11 +114,18 @@ export async function POST(req: Request) {
       }
     }
 
+    // If creating a patient, initialize their patient profile
+    if (parsed.data.role === "patient") {
+      await db.insert(patientProfiles).values({
+        userId: newUser.id,
+      });
+    }
+
     // Record audit log
     await db.insert(auditLogs).values({
       actorId: admin.id,
       actorRole: "admin",
-      action: "staff_account_created",
+      action: parsed.data.role === "patient" ? "patient_account_created_by_admin" : "staff_account_created",
       entityType: "user",
       entityId: newUser.id,
       meta: { email: newUser.email, assignedRole: newUser.role },

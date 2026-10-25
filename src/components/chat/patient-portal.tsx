@@ -31,6 +31,7 @@ import {
   LifeBuoy,
   Loader2,
   Lock,
+  LogIn,
   Mail,
   MapPin,
   Menu,
@@ -57,6 +58,7 @@ import {
   Trash2,
   User,
   UserCheck,
+  UserPlus,
   UserRound,
   Users,
   X,
@@ -1067,15 +1069,16 @@ export function PatientPortal({
                 {signedIn ? (
                   <SignOutButton
                     redirectTo="/"
-                    className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 text-[10px]"
+                    className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 text-[10px] font-medium"
                   />
                 ) : (
                   <a
                     href="/login"
-                    className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 text-[10px]"
-                    title="Sign In"
+                    className="px-2.5 py-1 rounded-md bg-[#d49b35] hover:bg-[#e2aa45] text-[#11382b] text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors"
+                    title="Sign In to Portal"
                   >
-                    <UserRound className="h-3.5 w-3.5" />
+                    <LogIn className="h-3 w-3" />
+                    <span>Sign In</span>
                   </a>
                 )}
               </div>
@@ -1096,27 +1099,6 @@ export function PatientPortal({
       {/* 2. CHATGPT-MOOD MAIN WORKSPACE CANVAS                                 */}
       {/* --------------------------------------------------------------------- */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[#ffffff] relative overflow-hidden">
-        {/* Staff Preview Bar for Clinicians, Receptionists, and Admins */}
-        {currentUser && (currentUser.role === "clinician" || currentUser.role === "receptionist" || currentUser.role === "admin") && (
-          <div className="bg-[#11382b] text-white px-4 py-2 text-xs flex items-center justify-between border-b border-white/10 shrink-0 z-20">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[#d49b35] text-[#11382b] px-2 py-0.5 font-bold uppercase tracking-wider text-[10px]">
-                {currentUser.role === "clinician" ? "Doctor Preview" : currentUser.role === "receptionist" ? "Reception Preview" : "Admin Preview"}
-              </span>
-              <span className="hidden sm:inline text-white/90">
-                You are previewing the Patient Front Desk as <span className="font-semibold text-white">{currentUser.name}</span>.
-              </span>
-            </div>
-            <a
-              href="/staff"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#d49b35] px-3.5 py-1 font-semibold text-[#11382b] hover:bg-[#e6b349] transition-all text-xs shadow-xs"
-            >
-              <span>Return to {currentUser.role === "clinician" ? "Doctor" : currentUser.role === "receptionist" ? "Reception" : "Admin"} Console</span>
-              <ArrowUpRight className="h-3 w-3" />
-            </a>
-          </div>
-        )}
-
         {/* TOP COMMAND BAR */}
         <header className="h-14 shrink-0 border-b border-[#e8eee6] px-4 sm:px-6 flex items-center justify-between gap-4 bg-[#fcfdfa]/90 backdrop-blur-md z-10">
           <div className="flex items-center gap-3">
@@ -1194,15 +1176,35 @@ export function PatientPortal({
               <span className="hidden md:inline">Hotline</span>
             </a>
 
-            {/* Staff Console Link if Staff */}
-            {(currentUser?.role === "clinician" || currentUser?.role === "receptionist" || currentUser?.role === "admin") && (
-              <a
-                href="/staff"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-3 py-1 text-xs font-semibold text-white hover:bg-[#1a4a3a] shadow-xs"
-              >
-                <span>Back to Console</span>
-                <ArrowUpRight className="h-3 w-3" />
-              </a>
+            {/* Universal Sign In / Account Status */}
+            {signedIn ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-[#11382b] bg-white border border-[#d6e3d5] rounded-full px-3 py-1 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="font-semibold">{currentUser?.name}</span>
+                </span>
+                <SignOutButton
+                  redirectTo="/"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <a
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-3.5 py-1 text-xs font-bold text-white hover:bg-[#1a4a3a] shadow-xs transition-colors"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>Sign In</span>
+                </a>
+                <a
+                  href="/login"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors"
+                >
+                  <UserPlus className="h-3 w-3 text-[#d49b35]" />
+                  <span>Register</span>
+                </a>
+              </div>
             )}
           </div>
         </header>

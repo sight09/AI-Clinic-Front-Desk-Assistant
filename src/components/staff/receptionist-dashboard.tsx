@@ -38,12 +38,13 @@ import {
   Provider,
 } from "./types";
 
-type ReceptionistTab = "schedule" | "cancellation_requests" | "automation" | "book_patient" | "providers" | "billing";
+type ReceptionistTab = "schedule" | "cancellation_requests" | "automation" | "notifications" | "book_patient" | "providers" | "billing";
 
 const RECEPTIONIST_TABS = [
   { id: "schedule", label: "Front-Desk Check-In", icon: CalendarDays },
   { id: "cancellation_requests", label: "Cancellation Requests", icon: CalendarCheck },
   { id: "automation", label: "Automated Workflows & Reminders", icon: BellRing },
+  { id: "notifications", label: "Notifications & Inquiries", icon: BellRing },
   { id: "book_patient", label: "Book for Patient", icon: CalendarPlus },
   { id: "providers", label: "Doctor Availability & Rooms", icon: Stethoscope },
   { id: "billing", label: "Cashier & Checkout", icon: CreditCard },
@@ -303,7 +304,7 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
             {RECEPTIONIST_TABS.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
-              const count = t.id === "cancellation_requests" ? pendingRequests.length : 0;
+              const count = t.id === "cancellation_requests" ? pendingRequests.length : t.id === "notifications" ? notificationsList.length : 0;
               return (
                 <button
                   key={t.id}
@@ -347,14 +348,9 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
           </div>
 
           {/* Footer */}
-          <div className="mt-auto pt-6 text-xs text-cream/50">
-            <a
-              href="/?preview=patient"
-              className="flex items-center gap-2 rounded-xl p-2 hover:bg-cream/10 text-cream/80 hover:text-cream transition-colors"
-            >
-              <ArrowRight className="h-3.5 w-3.5 rotate-180" />
-              <span>Preview Patient Front Desk</span>
-            </a>
+          <div className="mt-auto pt-6 text-xs text-cream/40 border-t border-cream/10">
+            <p className="text-[11px] font-medium">Meridian Grove Front Desk</p>
+            <p className="text-[10px] text-cream/30">Reception Station · Active</p>
           </div>
         </div>
       </aside>
@@ -386,9 +382,6 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
               <RefreshCw className="h-3 w-3" />
               <span>Switch Role</span>
             </button>
-            <a href="/?preview=patient" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
-              ← Preview Patient Front Desk
-            </a>
             <SignOutButton
               redirectTo="/login"
               className="rounded-full border border-cream/20 bg-cream/5 px-3.5 py-1.5 text-xs text-cream hover:bg-cream/15 cursor-pointer"
@@ -799,6 +792,52 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* TAB: NOTIFICATIONS & INQUIRIES */}
+          {tab === "notifications" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-2xl text-cream">Front-Desk Notifications &amp; Inquiries</h2>
+                  <p className="text-xs text-cream/60">
+                    Live operational updates: newly confirmed bookings, cancellation submissions, and patient arrival alerts.
+                  </p>
+                </div>
+                <span className="rounded-full bg-gold/20 border border-gold/30 px-3 py-1 text-xs font-bold text-gold">
+                  {notificationsList.length} Total Alerts
+                </span>
+              </div>
+
+              {notificationsList.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-cream/20 bg-cream/5 p-12 text-center">
+                  <BellRing className="mx-auto h-8 w-8 text-cream/30" />
+                  <p className="mt-3 text-xs text-cream/60">No pending notifications at this time.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notificationsList.map((n) => (
+                    <div
+                      key={n.id}
+                      className="rounded-2xl border border-cream/10 bg-cream/5 p-4 transition-colors hover:bg-cream/10 flex items-start gap-3.5"
+                    >
+                      <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold/20 text-gold">
+                        <BellRing className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-xs font-bold text-cream">{n.title}</h4>
+                          <span className="text-[10px] text-cream/40 font-mono">
+                            {fmtDate(n.createdAt)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-cream/80 leading-relaxed">{n.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

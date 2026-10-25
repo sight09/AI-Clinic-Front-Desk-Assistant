@@ -7,18 +7,12 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-interface HomePageProps {
-  searchParams?: Promise<{ preview?: string }>;
-}
-
-export default async function HomePage(props: HomePageProps) {
+export default async function HomePage() {
   const user = await getCurrentUser();
-  const searchParams = props.searchParams ? await props.searchParams : {};
-  const isPreview = searchParams.preview === "patient" || searchParams.preview === "true";
 
-  // Role-Based Routing: Authenticated staff (clinician, receptionist, admin) belong in their
-  // dedicated staff workspace (/staff), unless explicitly previewing the patient-facing front desk.
-  if (isStaff(user) && !isPreview) {
+  // Strict Role-Based Routing: Authenticated clinic workers (clinician, receptionist, admin)
+  // have their own dedicated staff consoles (/staff) and are never directed to the patient portal.
+  if (isStaff(user)) {
     redirect("/staff");
   }
 

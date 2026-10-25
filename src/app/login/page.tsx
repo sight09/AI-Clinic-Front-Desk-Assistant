@@ -24,9 +24,9 @@ function LoginForm() {
   const params = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">("login");
 
-  // Login states
-  const [email, setEmail] = useState("patient@demo.clinic");
-  const [password, setPassword] = useState("demo1234");
+  // Login states - check query param if pre-filled, otherwise clean inputs
+  const [email, setEmail] = useState(() => params.get("email") || "");
+  const [password, setPassword] = useState("");
 
   // Registration states
   const [regName, setRegName] = useState("");
@@ -58,7 +58,7 @@ function LoginForm() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
           proto: window.location.protocol.replace(":", ""),
         }),
@@ -66,7 +66,7 @@ function LoginForm() {
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(
-          data?.error?.message ?? `Sign-in failed (server ${res.status}). Try reloading the page.`,
+          data?.error?.message ?? `Sign-in failed (server ${res.status}). Check email and password.`,
         );
       }
       const next = params.get("next");
@@ -124,19 +124,31 @@ function LoginForm() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-6 py-12">
+    <main className="grid min-h-screen place-items-center px-6 py-12 bg-[#f7f8f4]">
       <div className="w-full max-w-lg">
-        <div className="mb-8 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-3xl bg-pine text-gold">
+        <div className="mb-6 flex items-center justify-between">
+          <a
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-pine/70 hover:text-pine transition-colors"
+          >
+            ← Back to Clinic Front Desk
+          </a>
+          <span className="rounded-full bg-pine/10 px-2.5 py-0.5 text-[10px] font-bold text-pine uppercase tracking-wider">
+            Meridian Grove Portal
+          </span>
+        </div>
+
+        <div className="mb-6 text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-3xl bg-pine text-gold shadow-md">
             <HeartPulse className="h-7 w-7" />
           </span>
-          <h1 className="font-display mt-5 text-3xl text-pine">
-            {mode === "login" ? "Meridian Grove Clinic" : "New Patient Registration"}
+          <h1 className="font-display mt-4 text-3xl text-pine">
+            {mode === "login" ? "Clinic System Sign In" : "New Patient Registration"}
           </h1>
-          <p className="mt-2 text-sm text-moss">
+          <p className="mt-1.5 text-xs text-moss">
             {mode === "login"
-              ? "Sign in with a demo account or your registered credentials"
-              : "Create your personal clinical profile and portal account"}
+              ? "Sign in with your staff account (Doctor, Receptionist, Admin) or patient credentials."
+              : "Create your personal clinical profile and online portal account."}
           </p>
         </div>
 
@@ -193,8 +205,8 @@ function LoginForm() {
 
           {mode === "login" ? (
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-moss">
-                Quick Demo Accounts (Synthetic)
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-moss">
+                1-Click Test Accounts (Demo Identities)
               </p>
               <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {DEMO_ACCOUNTS.map((a) => (
@@ -207,7 +219,7 @@ function LoginForm() {
                     }}
                     className={`rounded-2xl border px-3 py-2 text-left text-xs transition-colors ${
                       email === a.email
-                        ? "border-pine bg-pine text-cream"
+                        ? "border-pine bg-pine text-cream font-semibold shadow-xs"
                         : "border-pine/15 bg-bone text-pine hover:border-pine/40"
                     }`}
                   >
@@ -219,13 +231,14 @@ function LoginForm() {
               <form onSubmit={submitLogin} className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-moss">
-                    Email
+                    Account Email
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 w-full rounded-2xl border border-pine/15 bg-bone px-4 text-sm focus:border-pine/40 focus:outline-none"
+                    placeholder="doctor@demo.clinic or your-email@domain.com"
+                    className="h-12 w-full rounded-2xl border border-pine/15 bg-bone px-4 text-sm text-ink placeholder:text-ink/35 focus:border-pine/40 focus:outline-none"
                     required
                   />
                 </div>
@@ -237,7 +250,8 @@ function LoginForm() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 w-full rounded-2xl border border-pine/15 bg-bone px-4 text-sm focus:border-pine/40 focus:outline-none"
+                    placeholder="Enter account password"
+                    className="h-12 w-full rounded-2xl border border-pine/15 bg-bone px-4 text-sm text-ink placeholder:text-ink/35 focus:border-pine/40 focus:outline-none"
                     required
                   />
                 </div>
@@ -245,10 +259,10 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-pine text-sm font-medium text-cream transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-pine text-sm font-medium text-cream transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-md"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                  Sign in
+                  Sign In to Clinic Portal
                 </button>
               </form>
             </div>

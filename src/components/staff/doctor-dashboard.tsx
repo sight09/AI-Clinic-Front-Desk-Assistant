@@ -41,12 +41,13 @@ import {
   VisitRecord,
 } from "./types";
 
-type DoctorTab = "schedule" | "records" | "review" | "profile";
+type DoctorTab = "schedule" | "records" | "review" | "notifications" | "profile";
 
 const DOCTOR_TABS = [
   { id: "schedule", label: "My Schedule & Visits", icon: CalendarDays },
   { id: "records", label: "Patient EHR & History", icon: Stethoscope },
   { id: "review", label: "AI Intake Review Queue", icon: ClipboardCheck },
+  { id: "notifications", label: "Notifications & Alerts", icon: BellRing },
   { id: "profile", label: "Clinical Profile & Hours", icon: UserCheck },
 ] as const;
 
@@ -277,7 +278,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
             {DOCTOR_TABS.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
-              const count = t.id === "review" ? drafts.length : 0;
+              const count = t.id === "review" ? drafts.length : t.id === "notifications" ? notificationsList.length : 0;
               return (
                 <button
                   key={t.id}
@@ -321,14 +322,9 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
           </div>
 
           {/* Footer */}
-          <div className="mt-auto pt-6 text-xs text-cream/50">
-            <a
-              href="/?preview=patient"
-              className="flex items-center gap-2 rounded-xl p-2 hover:bg-cream/10 text-cream/80 hover:text-cream transition-colors"
-            >
-              <ArrowRight className="h-3.5 w-3.5 rotate-180" />
-              <span>Preview Patient Front Desk</span>
-            </a>
+          <div className="mt-auto pt-6 text-xs text-cream/40 border-t border-cream/10">
+            <p className="text-[11px] font-medium">Meridian Grove EHR</p>
+            <p className="text-[10px] text-cream/30">Doctor Station · Certified Access</p>
           </div>
         </div>
       </aside>
@@ -360,9 +356,6 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
               <RefreshCw className="h-3 w-3" />
               <span>Switch Role</span>
             </button>
-            <a href="/?preview=patient" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
-              ← Preview Patient Front Desk
-            </a>
             <SignOutButton
               redirectTo="/login"
               className="rounded-full border border-cream/20 bg-cream/5 px-3.5 py-1.5 text-xs text-cream hover:bg-cream/15 cursor-pointer"
@@ -580,7 +573,53 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
             </div>
           )}
 
-          {/* TAB 4: CLINICAL PROFILE */}
+          {/* TAB 4: NOTIFICATIONS & ALERTS */}
+          {tab === "notifications" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-2xl text-cream">Doctor Notifications &amp; Alerts</h2>
+                  <p className="text-xs text-cream/60">
+                    Real-time notifications: new bookings, appointment confirmations, and patient schedule changes.
+                  </p>
+                </div>
+                <span className="rounded-full bg-gold/20 border border-gold/30 px-3 py-1 text-xs font-bold text-gold">
+                  {notificationsList.length} Total Alerts
+                </span>
+              </div>
+
+              {notificationsList.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-cream/20 bg-cream/5 p-12 text-center">
+                  <BellRing className="mx-auto h-8 w-8 text-cream/30" />
+                  <p className="mt-3 text-xs text-cream/60">No pending notifications at this time.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notificationsList.map((n) => (
+                    <div
+                      key={n.id}
+                      className="rounded-2xl border border-cream/10 bg-cream/5 p-4 transition-colors hover:bg-cream/10 flex items-start gap-3.5"
+                    >
+                      <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold/20 text-gold">
+                        <BellRing className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-xs font-bold text-cream">{n.title}</h4>
+                          <span className="text-[10px] text-cream/40 font-mono">
+                            {fmtDate(n.createdAt)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-cream/80 leading-relaxed">{n.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: CLINICAL PROFILE */}
           {tab === "profile" && (
             <div className="space-y-6">
               <div>
