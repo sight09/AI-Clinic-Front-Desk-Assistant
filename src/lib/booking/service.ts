@@ -23,7 +23,7 @@ import {
   invoices,
   notifications,
 } from "@/db/schema";
-import { and, asc, eq, gt, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gt, gte, ilike, lte } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { AppError } from "@/lib/errors";
 
@@ -71,23 +71,35 @@ export interface AvailabilitySlot {
   slotId: string;
   startAt: string;
   durationMin: number;
+  providerId: string;
   providerName: string;
   departmentName: string;
 }
 
 export async function listAvailability(opts: {
   departmentId?: string;
+  providerId?: string;
+  providerName?: string;
   from?: Date;
   to?: Date;
   limit?: number;
 }): Promise<AvailabilitySlot[]> {
   const from = opts.from ?? new Date();
   const to = opts.to ?? new Date(from.getTime() + 1000 * 60 * 60 * 24 * 14);
+
+  let providerFilter = undefined;
+  if (opts.providerId) {
+    providerFilter = eq(slots.providerId, opts.providerId);
+  } else if (opts.providerName && opts.providerName.trim()) {
+    providerFilter = ilike(providers.name, `%${opts.providerName.trim()}%`);
+  }
+
   const rows = await db
     .select({
       slotId: slots.id,
       startAt: slots.startAt,
       durationMin: slots.durationMin,
+      providerId: slots.providerId,
       providerName: providers.name,
       departmentName: departments.name,
     })
@@ -100,11 +112,40 @@ export async function listAvailability(opts: {
         gt(slots.startAt, from),
         lte(slots.startAt, to),
         opts.departmentId ? eq(departments.id, opts.departmentId) : undefined,
+        providerFilter,
       ),
     )
     .orderBy(asc(slots.startAt))
-    .limit(opts.limit ?? 30);
-  return rows.map((r) => ({ ...r, startAt: r.startAt.toISOString() }));
+    .limit(opts.limit ? (opts.providerId || opts.providerName ? opts.limit : Math.max(opts.limit * 3, 30)) : 40);
+
+  // If no specific provider was requested, balance the slots across providers so not all slots belong to just one doctor
+  let finalRows = rows;
+  if (!opts.providerId && !opts.providerName && opts.limit && rows.length > opts.limit) {
+    const byProvider = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const list = byProvider.get(r.providerId) ?? [];
+      list.push(r);
+      byProvider.set(r.providerId, list);
+    }
+    const interleaved: typeof rows = [];
+    let added = true;
+    let round = 0;
+    while (interleaved.length < opts.limit && added) {
+      added = false;
+      for (const [, list] of byProvider) {
+        if (round < list.length && interleaved.length < opts.limit) {
+          interleaved.push(list[round]!);
+          added = true;
+        }
+      }
+      round++;
+    }
+    finalRows = interleaved.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  } else if (opts.limit && finalRows.length > opts.limit) {
+    finalRows = finalRows.slice(0, opts.limit);
+  }
+
+  return finalRows.map((r) => ({ ...r, startAt: r.startAt.toISOString() }));
 }
 
 /* ---------------------------------- booking -------------------------------- */
@@ -181,10 +222,11 @@ export async function bookAppointment(opts: {
         .onConflictDoNothing();
 
       // Automated patient confirmation notification
+      const formattedDoc = doctorName.startsWith("Dr.") ? doctorName : `Dr. ${doctorName}`;
       await tx.insert(notifications).values({
         userId: opts.patientId,
         title: "Appointment Confirmed",
-        message: `Your appointment with Dr. ${doctorName} is confirmed for ${startAt.toLocaleString()}. An automated 24-hour reminder has been scheduled.`,
+        message: `Your appointment with ${formattedDoc} is confirmed for ${startAt.toLocaleString()}. An automated 24-hour reminder has been scheduled.`,
         type: "booking_confirmed",
       });
 

@@ -11,7 +11,7 @@
  * permissions, or clinical decisions.
  */
 import { db } from "@/db";
-import { auditLogs, faqs, redFlagRules, intakeSessions } from "@/db/schema";
+import { auditLogs, faqs, redFlagRules, intakeSessions, providers, departments } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { SessionUser } from "@/lib/auth/service";
 import { sha256 } from "@/lib/auth/service";
@@ -197,6 +197,8 @@ export function classifyIntent(text: string): Intent {
     "see the doctor",
     "earliest",
     "make an appointment",
+    "consultation",
+    "consult",
   ];
   const intakeSignals = [
     "i have",
@@ -412,7 +414,50 @@ export async function handleAssistantMessage(opts: {
         },
       };
     }
-    const slots = await listAvailability({ limit: 8 });
+
+    // Inspect user message for doctor or specialty preference
+    const clinicProviders = await db
+      .select({
+        id: providers.id,
+        name: providers.name,
+        specialty: providers.specialty,
+        departmentId: providers.departmentId,
+      })
+      .from(providers);
+
+    const msgStr = typeof opts.message === "string" ? opts.message : "";
+    const normMsg = normalizeText(msgStr).toLowerCase();
+    const requestedProvider = clinicProviders.find((p) => {
+      const pName = p.name.toLowerCase();
+      // Match full name or specific name parts (e.g. "Leon Meyer", "Meyer", "Rosa Ibarra", "Ibarra", "Priya Nair", "Whitfield")
+      const nameParts = pName.replace(/^(dr\.|nurse)\s+/i, "").split(/\s+/);
+      const lastName = nameParts[nameParts.length - 1];
+      const firstName = nameParts[0];
+      return (
+        normMsg.includes(pName) ||
+        (lastName && lastName.length > 2 && normMsg.includes(lastName)) ||
+        (firstName && firstName.length > 3 && normMsg.includes(firstName))
+      );
+    });
+
+    // Check department / specialty match if no specific provider was matched
+    let deptFilter: string | undefined = undefined;
+    if (!requestedProvider) {
+      const allDepts = await db.select().from(departments);
+      const matchedDept = allDepts.find((d) => {
+        const dName = d.name.toLowerCase();
+        return normMsg.includes(dName) || normMsg.includes(dName.replace(/s$/, ""));
+      });
+      if (matchedDept) {
+        deptFilter = matchedDept.id;
+      }
+    }
+
+    const slots = await listAvailability({
+      providerId: requestedProvider?.id,
+      departmentId: deptFilter,
+      limit: 8,
+    });
 
     await db.insert(auditLogs).values({
       actorId: opts.user.id,
@@ -420,33 +465,45 @@ export async function handleAssistantMessage(opts: {
       action: "ai_tool_call",
       entityType: "tool",
       entityId: "check_availability",
-      meta: { tool: "check_availability", slotsFound: slots.length },
+      meta: {
+        tool: "check_availability",
+        slotsFound: slots.length,
+        requestedProvider: requestedProvider?.name,
+        departmentId: deptFilter,
+      },
     });
 
     if (slots.length === 0) {
+      const notFoundMsg = requestedProvider
+        ? `There are currently no open slots with ${requestedProvider.name} in the next two weeks. Please contact the front desk, or ask me to add you to the waitlist.`
+        : "There are no open slots in the next two weeks. Please contact the front desk, or ask me to add you to the waitlist.";
       return {
         status: 200,
         body: {
           type: "booking_help",
-          message:
-            "There are no open slots in the next two weeks. Please contact the front desk, or ask me to add you to the waitlist.",
+          message: notFoundMsg,
           toolCalls: [
             {
               tool: "check_availability",
               status: "success",
-              summary: "Checked provider calendar; 0 open slots found",
+              summary: `Checked provider calendar; 0 open slots found${requestedProvider ? ` for ${requestedProvider.name}` : ""}`,
+              parameters: requestedProvider ? { provider: requestedProvider.name } : undefined,
             },
           ],
           requestId,
         },
       };
     }
+
+    const replyMsg = requestedProvider
+      ? `Here are the next available appointments with ${requestedProvider.name} (${requestedProvider.specialty || "Physician"}). Pick a time that suits you and I'll confirm it.`
+      : "Here are the next available appointments pulled live from our schedule across our care team. Pick a time that suits you and I'll confirm it.";
+
     return {
       status: 200,
       body: {
         type: "booking",
-        message:
-          "Here are the next available appointments pulled live from our schedule. Pick a time that suits you and I'll confirm it.",
+        message: replyMsg,
         slots: slots.map((s) => ({
           slotId: s.slotId,
           startAt: s.startAt,
@@ -458,7 +515,10 @@ export async function handleAssistantMessage(opts: {
           {
             tool: "check_availability",
             status: "success",
-            summary: `Live calendar query returned ${slots.length} available slots`,
+            summary: requestedProvider
+              ? `Live calendar query returned ${slots.length} available slots for ${requestedProvider.name}`
+              : `Live calendar query returned ${slots.length} available slots across care team`,
+            parameters: requestedProvider ? { provider: requestedProvider.name } : undefined,
           },
         ],
         requestId,

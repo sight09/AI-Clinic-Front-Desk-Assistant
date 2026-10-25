@@ -4,7 +4,7 @@ import { AdminDashboard } from "./admin-dashboard";
 import { DoctorDashboard } from "./doctor-dashboard";
 import { ReceptionistDashboard } from "./receptionist-dashboard";
 
-export function StaffDashboard({ user }: { user: { name: string; role: string } }) {
+export function StaffDashboard({ user }: { user: { name: string; role: string; email?: string } }) {
   if (user.role === "admin") {
     return <AdminDashboard user={user} />;
   }

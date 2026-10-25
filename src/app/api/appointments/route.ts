@@ -148,8 +148,15 @@ export async function POST(req: Request) {
         });
       }
 
-      // Dispatch to Doctors / Clinicians
-      for (const doc of clinicians) {
+      // Dispatch to assigned Doctor / Clinician (or all clinicians if unassigned)
+      const assignedClinician = clinicians.find((c) => {
+        const cName = c.name.toLowerCase().replace(/^(dr\.|nurse)\s+/i, "");
+        const dName = docName.toLowerCase().replace(/^(dr\.|nurse)\s+/i, "");
+        return cName.includes(dName) || dName.includes(cName);
+      });
+      const targetClinicians = assignedClinician ? [assignedClinician] : clinicians;
+
+      for (const doc of targetClinicians) {
         await db.insert(notifications).values({
           userId: doc.id,
           title: "New Patient Scheduled",

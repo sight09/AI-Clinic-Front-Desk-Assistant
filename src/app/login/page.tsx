@@ -16,7 +16,8 @@ const DEMO_ACCOUNTS = [
   { email: "patient@demo.clinic", label: "Maya · patient", role: "patient" },
   { email: "patient2@demo.clinic", label: "Jordan · patient", role: "patient" },
   { email: "receptionist@demo.clinic", label: "Sarah · receptionist", role: "receptionist" },
-  { email: "clinician@demo.clinic", label: "Dr. Ibarra · clinician", role: "clinician" },
+  { email: "clinician@demo.clinic", label: "Dr. Rosa Ibarra · clinician", role: "clinician" },
+  { email: "dr.meyer@demo.clinic", label: "Dr. Leon Meyer · clinician", role: "clinician" },
   { email: "admin@demo.clinic", label: "Theo · admin", role: "admin" },
 ];
 

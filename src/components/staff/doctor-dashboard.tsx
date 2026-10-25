@@ -51,7 +51,7 @@ const DOCTOR_TABS = [
   { id: "profile", label: "Clinical Profile & Hours", icon: UserCheck },
 ] as const;
 
-export function DoctorDashboard({ user }: { user: { name: string; role: string } }) {
+export function DoctorDashboard({ user }: { user: { name: string; role: string; email?: string } }) {
   const [tab, setTab] = useState<DoctorTab>("schedule");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [records, setRecords] = useState<VisitRecord[]>([]);
@@ -163,7 +163,14 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
     e.preventDefault();
     setConsultBusy(true);
     try {
-      const defaultProvId = newConsult.providerId || providers[0]?.id;
+      const myProvider =
+        providers.find(
+          (p) =>
+            p.name.toLowerCase().includes(user.name.toLowerCase()) ||
+            user.name.toLowerCase().includes(p.name.toLowerCase().replace(/^(dr\.|nurse)\s+/i, "")) ||
+            (user.email && p.contactEmail?.toLowerCase() === user.email.toLowerCase())
+        ) || providers[0];
+      const defaultProvId = newConsult.providerId || myProvider?.id || providers[0]?.id;
       const res = await fetch("/api/records", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -627,37 +634,52 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
                 <p className="text-xs text-cream/60">Your practice profile, assigned consultation suite, and clinic hours.</p>
               </div>
 
-              <div className="max-w-xl rounded-3xl border border-cream/10 bg-cream/5 p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gold text-pine font-bold text-xl">
-                    MD
-                  </div>
-                  <div>
-                    <h3 className="font-display text-lg text-cream font-bold">{user.name}</h3>
-                    <p className="text-xs text-gold">Senior Healthcare Professional · General Medicine</p>
-                    <p className="text-[11px] text-cream/50 mt-0.5">Meridian Grove Clinic Staff</p>
-                  </div>
-                </div>
+              {(() => {
+                const myProvider =
+                  providers.find(
+                    (p) =>
+                      p.name.toLowerCase().includes(user.name.toLowerCase()) ||
+                      user.name.toLowerCase().includes(p.name.toLowerCase().replace(/^(dr\.|nurse)\s+/i, "")) ||
+                      (user.email && p.contactEmail?.toLowerCase() === user.email.toLowerCase())
+                  ) || providers[0];
+                return (
+                  <div className="max-w-xl rounded-3xl border border-cream/10 bg-cream/5 p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gold text-pine font-bold text-xl">
+                        MD
+                      </div>
+                      <div>
+                        <h3 className="font-display text-lg text-cream font-bold">{myProvider?.name || user.name}</h3>
+                        <p className="text-xs text-gold">
+                          {myProvider?.title || "Healthcare Provider"} · {myProvider?.specialty || "General Medicine"}
+                        </p>
+                        <p className="text-[11px] text-cream/50 mt-0.5">Meridian Grove Clinic Staff</p>
+                      </div>
+                    </div>
 
-                <div className="grid gap-2 border-t border-cream/10 pt-4 text-xs">
-                  <div className="flex justify-between py-1 border-b border-cream/5">
-                    <span className="text-cream/50">Consultation Suite:</span>
-                    <span className="font-semibold text-cream">Suite 101 (Floor 1)</span>
+                    <div className="grid gap-2 border-t border-cream/10 pt-4 text-xs">
+                      <div className="flex justify-between py-1 border-b border-cream/5">
+                        <span className="text-cream/50">Consultation Suite:</span>
+                        <span className="font-semibold text-cream">{myProvider?.roomNumber || "Suite 102"}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-cream/5">
+                        <span className="text-cream/50">Practice Hours:</span>
+                        <span className="font-semibold text-cream">{myProvider?.workingHours || "Monday – Friday 09:00 – 16:00"}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-cream/5">
+                        <span className="text-cream/50">Standard Consultation Fee:</span>
+                        <span className="font-semibold text-emerald-300">
+                          ${myProvider?.consultationFee || 90}.00
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-cream/50">Contact Email:</span>
+                        <span className="font-mono text-cream/80">{myProvider?.contactEmail || user.email || "dr.meyer@demo.clinic"}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-cream/5">
-                    <span className="text-cream/50">Practice Hours:</span>
-                    <span className="font-semibold text-cream">Monday – Friday 09:00 – 16:00</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-cream/5">
-                    <span className="text-cream/50">Standard Consultation Fee:</span>
-                    <span className="font-semibold text-emerald-300">$85.00</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-cream/50">Contact Email:</span>
-                    <span className="font-mono text-cream/80">clinician@demo.clinic</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
         </div>

@@ -27,15 +27,23 @@ export interface DemoRoleAccount {
 export const DEMO_ROLES: DemoRoleAccount[] = [
   {
     email: "clinician@demo.clinic",
-    name: "Dr. Elena Ibarra",
+    name: "Dr. Rosa Ibarra",
     role: "clinician",
-    title: "Healthcare Provider / Physician",
-    badge: "Doctor Console",
+    title: "Senior General Practitioner (Family Medicine)",
+    badge: "Doctor Suite 101",
+    defaultDestination: "Doctor Dashboard (/staff)",
+  },
+  {
+    email: "dr.meyer@demo.clinic",
+    name: "Dr. Leon Meyer",
+    role: "clinician",
+    title: "Consultant Physician (Internal Medicine)",
+    badge: "Doctor Suite 102",
     defaultDestination: "Doctor Dashboard (/staff)",
   },
   {
     email: "receptionist@demo.clinic",
-    name: "Sarah Miller",
+    name: "Sarah Jenkins",
     role: "receptionist",
     title: "Front Desk Receptionist",
     badge: "Reception Console",
@@ -43,7 +51,7 @@ export const DEMO_ROLES: DemoRoleAccount[] = [
   },
   {
     email: "admin@demo.clinic",
-    name: "Theo Vance",
+    name: "Theo Park",
     role: "admin",
     title: "Clinic Operations Administrator",
     badge: "Admin Console",
@@ -59,7 +67,7 @@ export const DEMO_ROLES: DemoRoleAccount[] = [
   },
   {
     email: "patient2@demo.clinic",
-    name: "Jordan Lee",
+    name: "Jordan Ali",
     role: "patient",
     title: "Second Patient Account",
     badge: "Patient Portal",

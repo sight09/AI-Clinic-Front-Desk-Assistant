@@ -83,3 +83,14 @@ describe("authorization", () => {
     expect(() => assertOwnership(clinician, "p2")).not.toThrow();
   });
 });
+
+describe("doctor-specific booking classification", () => {
+  it("classifies physician-directed requests as booking intent", async () => {
+    const { classifyIntent } = await import("@/lib/assistant/pipeline");
+    expect(classifyIntent("I would like to book a consultation with Dr. Leon Meyer (Internal Medicine).")).toBe("booking");
+    expect(classifyIntent("Book an appointment with Dr. Rosa Ibarra please")).toBe("booking");
+    expect(classifyIntent("Schedule a session with Nurse Priya Nair")).toBe("booking");
+    expect(classifyIntent("Physiotherapy consultation with Sam Whitfield")).toBe("booking");
+  });
+});
+

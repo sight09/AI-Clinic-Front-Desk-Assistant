@@ -2959,23 +2959,28 @@ function ChatMessage({
               <CalendarDays className="h-4 w-4 text-[#d49b35]" /> Available Appointment Slots:
             </p>
             <div className="space-y-2">
-              {p.slots.slice(0, 4).map((slot) => (
+              {p.slots.slice(0, 6).map((slot) => (
                 <div
                   key={slot.slotId}
                   className="flex items-center justify-between rounded-2xl border border-[#e1ece0] bg-[#f8faf6] p-3 text-xs"
                 >
                   <div>
                     <p className="font-bold text-[#11382b]">{fmtTime(slot.startAt)}</p>
-                    <p className="text-[11px] text-[#557564]">
-                      {slot.providerName} · {slot.departmentName}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="rounded-full bg-[#11382b]/10 text-[#11382b] px-2 py-0.5 text-[10px] font-bold">
+                        {slot.providerName}
+                      </span>
+                      <span className="text-[11px] text-[#557564]">
+                        · {slot.departmentName}
+                      </span>
+                    </div>
                   </div>
                   <button
                     onClick={() => onBook(slot, p.idem)}
                     disabled={busy}
                     className="rounded-full bg-[#11382b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1a4a3a] disabled:opacity-50 shadow-2xs active:scale-95 transition-transform cursor-pointer"
                   >
-                    Book This Slot
+                    Book with {slot.providerName.replace(/^(dr\.|nurse)\s+/i, "").split(" ")[0]}
                   </button>
                 </div>
               ))}

@@ -184,7 +184,7 @@ export async function runSeed(): Promise<SeedSummary> {
     .insert(providers)
     .values([
       {
-        name: "Dr. Ada Okoro",
+        name: "Dr. Rosa Ibarra",
         title: "Senior General Practitioner",
         departmentId: deptRows[0]!.id,
         specialty: "Family & Preventive Medicine",
@@ -192,7 +192,7 @@ export async function runSeed(): Promise<SeedSummary> {
         consultationFee: 85,
         roomNumber: "Consultation Suite 101",
         contactPhone: "+1 (555) 010-4477 ext 11",
-        contactEmail: "dr.okoro@demo.clinic",
+        contactEmail: "clinician@demo.clinic",
         workingHours: "Mon–Fri 09:00–16:00",
       },
       {
@@ -259,6 +259,9 @@ export async function runSeed(): Promise<SeedSummary> {
     { email: "patient2@demo.clinic", name: "Jordan Ali (synthetic)", role: "patient" as const },
     { email: "receptionist@demo.clinic", name: "Sarah Jenkins (synthetic)", role: "receptionist" as const },
     { email: "clinician@demo.clinic", name: "Dr. Rosa Ibarra (synthetic)", role: "clinician" as const },
+    { email: "dr.meyer@demo.clinic", name: "Dr. Leon Meyer (synthetic)", role: "clinician" as const },
+    { email: "priya.nair@demo.clinic", name: "Nurse Priya Nair (synthetic)", role: "clinician" as const },
+    { email: "sam.whitfield@demo.clinic", name: "Sam Whitfield (synthetic)", role: "clinician" as const },
     { email: "admin@demo.clinic", name: "Theo Park (synthetic)", role: "admin" as const },
   ];
   const userMap = new Map<string, string>();
@@ -276,12 +279,21 @@ export async function runSeed(): Promise<SeedSummary> {
   const mayaId = userMap.get("patient@demo.clinic");
   const jordanId = userMap.get("patient2@demo.clinic");
   const clinicianId = userMap.get("clinician@demo.clinic");
+  const meyerId = userMap.get("dr.meyer@demo.clinic");
+  const priyaId = userMap.get("priya.nair@demo.clinic");
+  const samId = userMap.get("sam.whitfield@demo.clinic");
 
   if (clinicianId && providerRows[0]) {
-    await db
-      .update(providers)
-      .set({ userId: clinicianId, name: "Dr. Rosa Ibarra", contactEmail: "clinician@demo.clinic" })
-      .where(eq(providers.id, providerRows[0].id));
+    await db.update(providers).set({ userId: clinicianId }).where(eq(providers.id, providerRows[0].id));
+  }
+  if (meyerId && providerRows[1]) {
+    await db.update(providers).set({ userId: meyerId }).where(eq(providers.id, providerRows[1].id));
+  }
+  if (priyaId && providerRows[2]) {
+    await db.update(providers).set({ userId: priyaId }).where(eq(providers.id, providerRows[2].id));
+  }
+  if (samId && providerRows[3]) {
+    await db.update(providers).set({ userId: samId }).where(eq(providers.id, providerRows[3].id));
   }
 
   if (mayaId) {
