@@ -78,7 +78,7 @@ npm run dev                   # start dev server on http://localhost:3000
 
 ```bash
 npm run db:reset              # wipe test data & re-seed fresh mock data anytime
-npx vitest run                # 42 unit tests (pure logic, auth, booking, billing, safety)
+npx vitest run                # 43 unit tests (pure logic, auth, booking isolation, billing, safety)
 npx tsx scripts/run-eval.ts   # 44-case safety & accuracy evaluation benchmark suite
 npm run typecheck             # TypeScript strict check (zero errors)
 ```
@@ -94,7 +94,8 @@ Password = `SEED_DEMO_PASSWORD` (default `demo1234`).
 | `patient@demo.clinic` | Patient (Maya Chen) | AI Front Desk, Appointments, Visit History, Invoices, Medical Profile, Notifications |
 | `patient2@demo.clinic` | Patient (Jordan Ali) | Ownership isolation testing & independent patient records |
 | `receptionist@demo.clinic` | Reception Staff (Sarah Jenkins) | Patient check-in, appointment queue status, billing & payment collection, schedule manager |
-| `clinician@demo.clinic` | Healthcare Professional (Dr. Rosa Ibarra) | Clinical visit documentation, physician diagnoses, vitals, prescriptions, AI review queue |
+| `clinician@demo.clinic` | Healthcare Professional (Dr. Rosa Ibarra) | Clinical visit documentation, physician diagnoses, vitals, prescriptions, Suite 101 schedule |
+| `dr.meyer@demo.clinic` | Healthcare Professional (Dr. Leon Meyer) | Internal medicine consultations, separate clinician schedule & Suite 102 availability |
 | `admin@demo.clinic` | Clinic Administrator (Theo Park) | Operational dashboards, executive daily reports, policy management, audit trail |
 
 *Note: You can also use the **"Patient Registration"** tab on `/login` to register a brand-new patient account with full medical profile details.*
