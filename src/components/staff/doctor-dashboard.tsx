@@ -59,7 +59,6 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
@@ -234,52 +233,52 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
   const drafts = summaries.filter((s) => s.status === "draft");
 
   return (
-    <div className="min-h-screen bg-pine text-cream antialiased flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[#f8faf7] text-[#162720] antialiased flex flex-col lg:flex-row">
       {/* ----------------- DOCTOR SIDEBAR ----------------- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-pine border-r border-cream/10 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-[#0c241c] text-[#e3ece6] border-r border-[#16382b] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between ${
           mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        <div className="p-5 flex flex-col flex-1 overflow-y-auto thin-scroll">
+        <div className="p-4 flex flex-col flex-1 overflow-y-auto thin-scroll">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-cream/10 pb-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-pine shadow-sm font-bold">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] shadow-xs font-bold">
                 <Stethoscope className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-display text-base font-bold text-cream tracking-tight">Meridian Grove</p>
-                <p className="text-[9.5px] uppercase tracking-wider text-gold font-semibold">Clinician Station</p>
+                <p className="font-display text-sm font-bold text-white tracking-tight">Meridian Grove</p>
+                <p className="text-[9.5px] uppercase tracking-wider text-[#d49b35] font-semibold">Clinician Station</p>
               </div>
             </div>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 rounded-full hover:bg-cream/10 text-cream/70"
+              className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/70"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Clinician Card */}
-          <div className="mt-4 rounded-2xl border border-cream/10 bg-cream/5 p-3">
+          <div className="mt-3.5 rounded-xl border border-white/10 bg-white/5 p-3">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-xl bg-purple-400/20 text-purple-300 font-bold text-xs">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-purple-400/20 text-purple-300 font-bold text-xs">
                 MD
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-cream truncate">{user.name}</p>
+                <p className="text-xs font-semibold text-white truncate">{user.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  <p className="text-[10px] text-cream/60 capitalize font-medium">Attending Physician Active</p>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <p className="text-[10px] text-emerald-300 capitalize font-medium">Attending Physician Active</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="mt-5 space-y-1">
-            <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-cream/40 uppercase">
+          <nav className="mt-4 space-y-1">
+            <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
               Clinical Workspace
             </p>
             {DOCTOR_TABS.map((t) => {
@@ -293,18 +292,18 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                     setTab(t.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
                     active
-                      ? "bg-gold text-pine font-bold shadow-xs"
-                      : "text-cream/70 hover:bg-cream/10 hover:text-cream"
+                      ? "bg-[#184838] text-white shadow-xs font-semibold"
+                      : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className="h-4 w-4" />
+                    <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
                     <span>{t.label}</span>
                   </div>
                   {count > 0 && (
-                    <span className="rounded-full bg-pulse px-2 py-0.5 text-[10px] font-bold text-cream">
+                    <span className="rounded-full bg-[#d49b35] px-2 py-0.5 text-[9.5px] font-bold text-[#11382b]">
                       {count}
                     </span>
                   )}
@@ -314,14 +313,14 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           </nav>
 
           {/* Quick Actions */}
-          <div className="mt-6 pt-4 border-t border-cream/10 space-y-2">
-            <p className="px-2 text-[10px] font-bold tracking-wider text-cream/40 uppercase">Clinical Actions</p>
+          <div className="mt-5 pt-3.5 border-t border-white/10 space-y-2">
+            <p className="px-2 text-[10px] font-bold tracking-wider text-white/40 uppercase">Clinical Actions</p>
             <button
               onClick={() => {
                 setShowConsultModal(true);
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold px-3 py-2 text-xs font-semibold text-pine hover:bg-gold/90 transition-transform active:scale-95 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d49b35] to-[#c28b2a] px-3 py-2 text-xs font-bold text-[#11382b] hover:brightness-105 transition-all shadow-xs active:scale-98 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Document Visit</span>
@@ -329,43 +328,46 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           </div>
 
           {/* Footer */}
-          <div className="mt-auto pt-6 text-xs text-cream/40 border-t border-cream/10">
-            <p className="text-[11px] font-medium">Meridian Grove EHR</p>
-            <p className="text-[10px] text-cream/30">Doctor Station · Certified Access</p>
+          <div className="mt-auto pt-4 text-xs text-white/50 border-t border-white/10 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold text-white/80">Meridian Grove EHR</p>
+              <p className="text-[9.5px] text-white/40">Doctor Station · Certified</p>
+            </div>
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
           </div>
         </div>
       </aside>
 
       {/* Main Canvas */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between border-b border-cream/10 px-6 py-3.5 bg-pine/90 backdrop-blur-md sticky top-0 z-30">
+        <header className="h-14 shrink-0 border-b border-[#e8eee6] px-4 sm:px-6 flex items-center justify-between gap-4 bg-[#fcfdfa]/90 backdrop-blur-md z-10 sticky top-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-cream/20 bg-cream/5 text-cream"
+              className="lg:hidden p-2 rounded-xl border border-[#d6e2d4] bg-white text-[#11382b] hover:bg-[#edf5ec] shadow-2xs"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
             <div>
-              <h2 className="text-sm font-bold text-cream capitalize">
+              <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
                 {DOCTOR_TABS.find((t) => t.id === tab)?.label}
               </h2>
-              <p className="text-[10px] text-cream/60">Physician Clinical Operations &amp; EHR Consultation</p>
+              <p className="text-[10.5px] text-[#567364] mt-0.5">Physician Clinical Operations &amp; EHR Consultation</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <button
               type="button"
               onClick={() => setShowRoleModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/25 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className="h-3 w-3 text-[#d49b35]" />
               <span>Switch Role</span>
             </button>
             <SignOutButton
               redirectTo="/login"
-              className="rounded-full border border-cream/20 bg-cream/5 px-3.5 py-1.5 text-xs text-cream hover:bg-cream/15 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
             />
           </div>
         </header>
@@ -374,17 +376,17 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
         <div className="p-6 lg:p-8 flex-1 overflow-y-auto">
           {/* TAB 1: DOCTOR SCHEDULE */}
           {tab === "schedule" && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="font-display text-2xl text-cream">My Clinical Schedule &amp; Consultations</h2>
-                <p className="text-xs text-cream/60">
+                <h2 className="font-display text-2xl font-bold text-[#11382b]">My Clinical Schedule &amp; Consultations</h2>
+                <p className="text-xs text-[#567364] mt-0.5">
                   Appointments assigned to your clinical care. Start consultations, document patient examinations, or request a reschedule.
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-3xl border border-cream/10 bg-cream/5">
+              <div className="overflow-hidden rounded-2xl border border-[#dce6db] bg-white shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-cream/10 text-[10px] tracking-[0.16em] text-cream/60 uppercase">
+                  <thead className="bg-[#f4f7f3] text-[10.5px] tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
                     <tr>
                       <th className="px-5 py-3">Time</th>
                       <th className="px-5 py-3">Patient</th>
@@ -393,36 +395,36 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                       <th className="px-5 py-3 text-right">Clinical Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-cream/10">
+                  <tbody className="divide-y divide-[#edf3ec]">
                     {appointments.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-5 py-8 text-center text-cream/50">
+                        <td colSpan={5} className="px-5 py-8 text-center text-[#7f998b]">
                           No appointments assigned for your schedule.
                         </td>
                       </tr>
                     ) : (
                       appointments.map((a) => (
-                        <tr key={a.id} className="hover:bg-cream/5 transition-colors">
-                          <td className="px-5 py-3.5 font-medium text-cream">{fmt(a.startAt)}</td>
+                        <tr key={a.id} className="hover:bg-[#f8fbf7] transition-colors">
+                          <td className="px-5 py-3.5 font-medium text-[#11382b]">{fmt(a.startAt)}</td>
                           <td className="px-5 py-3.5">
-                            <p className="font-semibold text-cream">{a.patientName}</p>
-                            <p className="text-[10px] text-cream/40">{a.patientEmail}</p>
+                            <p className="font-semibold text-[#11382b]">{a.patientName}</p>
+                            <p className="text-[10px] text-[#7f998b]">{a.patientEmail}</p>
                           </td>
-                          <td className="px-5 py-3.5 text-cream/70 max-w-44 truncate">{a.reason || "General Consultation"}</td>
+                          <td className="px-5 py-3.5 text-[#374e41] max-w-44 truncate">{a.reason || "General Consultation"}</td>
                           <td className="px-5 py-3.5">
                             <span
-                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
                                 a.status === "confirmed"
-                                  ? "bg-emerald-400/20 text-emerald-300"
+                                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                                   : a.status === "checked_in"
-                                  ? "bg-blue-400/20 text-blue-300"
+                                  ? "bg-blue-100 text-blue-800 border-blue-200"
                                   : a.status === "in_consultation"
-                                  ? "bg-purple-400/20 text-purple-300"
+                                  ? "bg-purple-100 text-purple-800 border-purple-200"
                                   : a.status === "completed"
-                                  ? "bg-emerald-500/30 text-emerald-200"
+                                  ? "bg-emerald-100 text-emerald-900 border-emerald-300"
                                   : a.status === "cancellation_requested" || a.status === "reschedule_requested"
-                                  ? "bg-amber-400/30 text-amber-200 border border-amber-400/40"
-                                  : "bg-pulse/20 text-pulse"
+                                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                                  : "bg-rose-100 text-rose-800 border-rose-200"
                               }`}
                             >
                               {a.status.replace("_", " ")}
@@ -433,7 +435,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                               {a.status === "checked_in" && (
                                 <button
                                   onClick={() => updateStatus(a.id, "in_consultation")}
-                                  className="rounded-full bg-purple-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-purple-600"
+                                  className="rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-purple-700 shadow-2xs cursor-pointer"
                                 >
                                   Start Consult
                                 </button>
@@ -450,13 +452,13 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                                       }));
                                       setShowConsultModal(true);
                                     }}
-                                    className="rounded-full bg-gold px-3 py-1 text-[11px] font-semibold text-pine hover:bg-gold/90"
+                                    className="rounded-full bg-[#11382b] px-3 py-1 text-[11px] font-bold text-white hover:bg-[#184838] shadow-2xs cursor-pointer"
                                   >
                                     Document Visit
                                   </button>
                                   <button
                                     onClick={() => updateStatus(a.id, "completed")}
-                                    className="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-600"
+                                    className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 shadow-2xs cursor-pointer"
                                   >
                                     Complete
                                   </button>
@@ -469,7 +471,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                                     setRequestReason("");
                                     setRequestType("cancellation");
                                   }}
-                                  className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-400/20"
+                                  className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800 hover:bg-amber-100 cursor-pointer"
                                   title="Submit request to front-desk reception"
                                 >
                                   Request Cancel/Reschedule
@@ -488,39 +490,39 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
 
           {/* TAB 2: PATIENT EHR & CHARTS */}
           {tab === "records" && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="font-display text-2xl text-cream">Patient Clinical Records &amp; Medical Charts</h2>
-                <p className="text-xs text-cream/60">
+                <h2 className="font-display text-2xl font-bold text-[#11382b]">Patient Clinical Records &amp; Medical Charts</h2>
+                <p className="text-xs text-[#567364] mt-0.5">
                   Clinical documentation, physical examination notes, human-rendered diagnoses, and prescriptions for your patients.
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 {records.map((r) => (
-                  <div key={r.id} className="rounded-3xl border border-cream/10 bg-cream/5 p-5 space-y-3">
-                    <div className="flex items-center justify-between pb-2 border-b border-cream/10">
+                  <div key={r.id} className="rounded-2xl border border-[#dce6db] bg-white p-5 space-y-3 shadow-2xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#edf3ec]">
                       <div>
-                        <p className="font-bold text-cream text-sm">{r.patientName}</p>
-                        <p className="text-[10px] text-cream/50">{r.patientEmail}</p>
+                        <p className="font-bold text-[#11382b] text-sm">{r.patientName}</p>
+                        <p className="text-[10px] text-[#7f998b]">{r.patientEmail}</p>
                       </div>
-                      <span className="text-[11px] font-semibold text-gold">{fmtDate(r.visitDate)}</span>
+                      <span className="text-[11px] font-bold text-[#d49b35]">{fmtDate(r.visitDate)}</span>
                     </div>
-                    <div className="text-xs space-y-1.5">
-                      <p><strong className="text-cream/60">Chief Complaint:</strong> {r.chiefComplaint}</p>
-                      <p><strong className="text-cream/60">Vitals:</strong> BP: {r.vitals.bloodPressure || "—"} · HR: {r.vitals.heartRate || "—"}</p>
-                      <div className="p-2.5 rounded-xl bg-pine/60 border border-cream/10">
-                        <p className="text-[10px] font-bold text-cream/50 uppercase">Clinical Exam Notes:</p>
-                        <p className="text-cream/90 mt-0.5">{r.clinicalNotes}</p>
+                    <div className="text-xs space-y-2 text-[#243a2f]">
+                      <p><strong className="text-[#567364]">Chief Complaint:</strong> {r.chiefComplaint}</p>
+                      <p><strong className="text-[#567364]">Vitals:</strong> BP: {r.vitals.bloodPressure || "—"} · HR: {r.vitals.heartRate || "—"}</p>
+                      <div className="p-3 rounded-xl bg-[#f8faf6] border border-[#e5efe3]">
+                        <p className="text-[10px] font-bold text-[#567364] uppercase">Clinical Exam Notes:</p>
+                        <p className="text-[#162720] mt-0.5">{r.clinicalNotes}</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-gold/10 border border-gold/30">
-                        <p className="text-[10px] font-bold text-gold uppercase">Diagnosis (Human Physician):</p>
-                        <p className="font-semibold text-cream mt-0.5">{r.diagnosis}</p>
+                      <div className="p-3 rounded-xl bg-[#fbf9f1] border border-[#ebdcb9]">
+                        <p className="text-[10px] font-bold text-[#94691e] uppercase">Diagnosis (Human Physician):</p>
+                        <p className="font-semibold text-[#11382b] mt-0.5">{r.diagnosis}</p>
                       </div>
                       {r.prescriptions && r.prescriptions.length > 0 && (
-                        <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                          <p className="text-[10px] font-bold text-purple-300 uppercase">Prescriptions:</p>
-                          <ul className="mt-1 list-disc list-inside text-cream/80">
+                        <div className="p-3 rounded-xl bg-purple-50 border border-purple-200">
+                          <p className="text-[10px] font-bold text-purple-800 uppercase">Prescriptions:</p>
+                          <ul className="mt-1 list-disc list-inside text-purple-950">
                             {r.prescriptions.map((p, idx) => (
                               <li key={idx}>{p.medication} · {p.dosage}</li>
                             ))}
@@ -536,39 +538,39 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
 
           {/* TAB 3: AI REVIEW QUEUE */}
           {tab === "review" && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="font-display text-2xl text-cream">AI Intake Review Queue</h2>
-                <p className="text-xs text-cream/60">
+                <h2 className="font-display text-2xl font-bold text-[#11382b]">AI Intake Review Queue</h2>
+                <p className="text-xs text-[#567364] mt-0.5">
                   Review and sign off on structured patient symptom extractions produced by the front-desk AI assistant.
                 </p>
               </div>
 
               {drafts.length === 0 ? (
-                <div className="rounded-3xl border border-cream/10 bg-cream/5 p-12 text-center text-cream/50">
-                  <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-400 mb-2" />
-                  <p className="text-sm font-semibold text-cream">Review queue is empty</p>
-                  <p className="text-xs text-cream/40 mt-1">No AI drafts pending physician review.</p>
+                <div className="rounded-2xl border border-[#dce6db] bg-white p-12 text-center shadow-2xs">
+                  <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600 mb-2" />
+                  <p className="text-sm font-semibold text-[#11382b]">Review queue is empty</p>
+                  <p className="text-xs text-[#7f998b] mt-1">No AI drafts pending physician review.</p>
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {drafts.map((d) => (
-                    <div key={d.id} className="rounded-2xl border border-cream/10 bg-cream/5 p-5 space-y-3">
-                      <div className="flex items-center justify-between pb-2 border-b border-cream/10">
-                        <span className="text-[10px] font-bold text-gold uppercase">AI Intake Draft</span>
-                        <span className="text-[10px] text-cream/50">{fmt(d.createdAt)}</span>
+                    <div key={d.id} className="rounded-2xl border border-[#dce6db] bg-white p-5 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#edf3ec]">
+                        <span className="text-[10px] font-bold text-[#d49b35] uppercase">AI Intake Draft</span>
+                        <span className="text-[10px] text-[#7f998b]">{fmt(d.createdAt)}</span>
                       </div>
-                      <p className="text-xs text-cream/90 leading-relaxed italic">&quot;{d.draft}&quot;</p>
-                      <div className="flex gap-2 justify-end pt-2">
+                      <p className="text-xs text-[#243a2f] leading-relaxed italic bg-[#f8faf6] p-3 rounded-xl border border-[#e5efe3]">&quot;{d.draft}&quot;</p>
+                      <div className="flex gap-2 justify-end pt-1">
                         <button
                           onClick={() => reviewDraft(d.id, "rejected")}
-                          className="rounded-full border border-rose-400/30 px-3 py-1 text-xs text-rose-300 hover:bg-rose-500/20"
+                          className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer"
                         >
                           Reject
                         </button>
                         <button
                           onClick={() => reviewDraft(d.id, "approved")}
-                          className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-600 shadow-xs"
+                          className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 shadow-2xs cursor-pointer"
                         >
                           Approve Draft
                         </button>
@@ -582,42 +584,42 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
 
           {/* TAB 4: NOTIFICATIONS & ALERTS */}
           {tab === "notifications" && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-6xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-display text-2xl text-cream">Doctor Notifications &amp; Alerts</h2>
-                  <p className="text-xs text-cream/60">
+                  <h2 className="font-display text-2xl font-bold text-[#11382b]">Doctor Notifications &amp; Alerts</h2>
+                  <p className="text-xs text-[#567364] mt-0.5">
                     Real-time notifications: new bookings, appointment confirmations, and patient schedule changes.
                   </p>
                 </div>
-                <span className="rounded-full bg-gold/20 border border-gold/30 px-3 py-1 text-xs font-bold text-gold">
+                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
                   {notificationsList.length} Total Alerts
                 </span>
               </div>
 
               {notificationsList.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-cream/20 bg-cream/5 p-12 text-center">
-                  <BellRing className="mx-auto h-8 w-8 text-cream/30" />
-                  <p className="mt-3 text-xs text-cream/60">No pending notifications at this time.</p>
+                <div className="rounded-2xl border border-dashed border-[#dce6db] bg-white p-12 text-center shadow-2xs">
+                  <BellRing className="mx-auto h-8 w-8 text-[#7f998b]" />
+                  <p className="mt-3 text-xs text-[#7f998b]">No pending notifications at this time.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {notificationsList.map((n) => (
                     <div
                       key={n.id}
-                      className="rounded-2xl border border-cream/10 bg-cream/5 p-4 transition-colors hover:bg-cream/10 flex items-start gap-3.5"
+                      className="rounded-2xl border border-[#dce6db] bg-white p-4 transition-colors hover:bg-[#f8fbf7] flex items-start gap-3.5 shadow-2xs"
                     >
-                      <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gold/20 text-gold">
+                      <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[#d49b35]/15 text-[#d49b35]">
                         <BellRing className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-xs font-bold text-cream">{n.title}</h4>
-                          <span className="text-[10px] text-cream/40 font-mono">
+                          <h4 className="text-xs font-bold text-[#11382b]">{n.title}</h4>
+                          <span className="text-[10px] text-[#7f998b] font-mono">
                             {fmtDate(n.createdAt)}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs text-cream/80 leading-relaxed">{n.message}</p>
+                        <p className="mt-1 text-xs text-[#374e41] leading-relaxed">{n.message}</p>
                       </div>
                     </div>
                   ))}
@@ -628,10 +630,10 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
 
           {/* TAB 5: CLINICAL PROFILE */}
           {tab === "profile" && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="font-display text-2xl text-cream">Professional Clinical Profile</h2>
-                <p className="text-xs text-cream/60">Your practice profile, assigned consultation suite, and clinic hours.</p>
+                <h2 className="font-display text-2xl font-bold text-[#11382b]">Professional Clinical Profile</h2>
+                <p className="text-xs text-[#567364] mt-0.5">Your practice profile, assigned consultation suite, and clinic hours.</p>
               </div>
 
               {(() => {
@@ -643,38 +645,38 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                       (user.email && p.contactEmail?.toLowerCase() === user.email.toLowerCase())
                   ) || providers[0];
                 return (
-                  <div className="max-w-xl rounded-3xl border border-cream/10 bg-cream/5 p-6 space-y-4">
+                  <div className="max-w-xl rounded-2xl border border-[#dce6db] bg-white p-6 space-y-4 shadow-2xs">
                     <div className="flex items-center gap-4">
-                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gold text-pine font-bold text-xl">
+                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] font-bold text-xl shadow-xs">
                         MD
                       </div>
                       <div>
-                        <h3 className="font-display text-lg text-cream font-bold">{myProvider?.name || user.name}</h3>
-                        <p className="text-xs text-gold">
+                        <h3 className="font-display text-lg text-[#11382b] font-bold">{myProvider?.name || user.name}</h3>
+                        <p className="text-xs text-[#d49b35] font-semibold">
                           {myProvider?.title || "Healthcare Provider"} · {myProvider?.specialty || "General Medicine"}
                         </p>
-                        <p className="text-[11px] text-cream/50 mt-0.5">Meridian Grove Clinic Staff</p>
+                        <p className="text-[11px] text-[#7f998b] mt-0.5">Meridian Grove Clinic Staff</p>
                       </div>
                     </div>
 
-                    <div className="grid gap-2 border-t border-cream/10 pt-4 text-xs">
-                      <div className="flex justify-between py-1 border-b border-cream/5">
-                        <span className="text-cream/50">Consultation Suite:</span>
-                        <span className="font-semibold text-cream">{myProvider?.roomNumber || "Suite 102"}</span>
+                    <div className="grid gap-2 border-t border-[#edf3ec] pt-4 text-xs">
+                      <div className="flex justify-between py-1 border-b border-[#edf3ec]">
+                        <span className="text-[#567364]">Consultation Suite:</span>
+                        <span className="font-semibold text-[#11382b]">{myProvider?.roomNumber || "Suite 102"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-cream/5">
-                        <span className="text-cream/50">Practice Hours:</span>
-                        <span className="font-semibold text-cream">{myProvider?.workingHours || "Monday – Friday 09:00 – 16:00"}</span>
+                      <div className="flex justify-between py-1 border-b border-[#edf3ec]">
+                        <span className="text-[#567364]">Practice Hours:</span>
+                        <span className="font-semibold text-[#11382b]">{myProvider?.workingHours || "Monday – Friday 09:00 – 16:00"}</span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-cream/5">
-                        <span className="text-cream/50">Standard Consultation Fee:</span>
-                        <span className="font-semibold text-emerald-300">
+                      <div className="flex justify-between py-1 border-b border-[#edf3ec]">
+                        <span className="text-[#567364]">Standard Consultation Fee:</span>
+                        <span className="font-semibold text-emerald-700">
                           ${myProvider?.consultationFee || 90}.00
                         </span>
                       </div>
                       <div className="flex justify-between py-1">
-                        <span className="text-cream/50">Contact Email:</span>
-                        <span className="font-mono text-cream/80">{myProvider?.contactEmail || user.email || "dr.meyer@demo.clinic"}</span>
+                        <span className="text-[#567364]">Contact Email:</span>
+                        <span className="font-mono text-[#11382b]">{myProvider?.contactEmail || user.email || "dr.meyer@demo.clinic"}</span>
                       </div>
                     </div>
                   </div>
@@ -688,52 +690,52 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
       {/* MODAL: DOCTOR CANCELLATION / RESCHEDULE REQUEST */}
       {requestModalAppt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-3xl border border-amber-400/40 bg-pine p-6 shadow-2xl text-cream space-y-4">
-            <div className="flex items-center gap-2.5 text-amber-300">
+          <div className="w-full max-w-md rounded-3xl border border-[#dce6db] bg-white p-6 shadow-2xl text-[#162720] space-y-4">
+            <div className="flex items-center gap-2.5 text-amber-700">
               <AlertTriangle className="h-5 w-5" />
               <h3 className="font-display text-base font-bold">Submit Schedule Adjustment Request</h3>
             </div>
-            <p className="text-xs text-cream/80 leading-relaxed">
+            <p className="text-xs text-[#567364] leading-relaxed">
               As a physician, you cannot cancel patient bookings directly. Submitting this request alerts the front desk to notify <strong>{requestModalAppt.patientName}</strong> and manage clinic scheduling.
             </p>
             {requestSuccess && (
-              <p className="rounded-xl bg-emerald-500/20 p-2.5 text-xs text-emerald-300 font-semibold">{requestSuccess}</p>
+              <p className="rounded-xl bg-emerald-100 border border-emerald-200 p-2.5 text-xs text-emerald-800 font-semibold">{requestSuccess}</p>
             )}
             <form onSubmit={handleDoctorRequest} className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-cream/70 uppercase">Request Type</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Request Type</label>
                 <select
                   value={requestType}
                   onChange={(e) => setRequestType(e.target.value as any)}
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-pine p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 >
                   <option value="cancellation">Request Cancellation (Cannot Attend)</option>
                   <option value="reschedule">Request Reschedule (Different Time Needed)</option>
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-cream/70 uppercase">Physician Reason * (Required)</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Physician Reason * (Required)</label>
                 <textarea
                   required
                   rows={3}
                   placeholder="Explain why you cannot attend (e.g. Emergency surgery rotation, clinical conference, illness)…"
                   value={requestReason}
                   onChange={(e) => setRequestReason(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setRequestModalAppt(null)}
-                  className="rounded-full border border-cream/20 px-4 py-2 text-xs text-cream/70 hover:bg-cream/10"
+                  className="rounded-full border border-[#dce6db] px-4 py-2 text-xs font-semibold text-[#567364] hover:bg-[#f2f6f1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={requestBusy || !requestReason.trim()}
-                  className="rounded-full bg-gold px-4 py-2 text-xs font-semibold text-pine hover:bg-gold/90 disabled:opacity-50"
+                  className="rounded-full bg-[#11382b] px-4 py-2 text-xs font-bold text-white hover:bg-[#184838] shadow-xs disabled:opacity-50"
                 >
                   {requestBusy ? "Submitting…" : "Submit to Reception"}
                 </button>
@@ -746,21 +748,21 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
       {/* MODAL: DOCUMENT VISIT */}
       {showConsultModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-xl rounded-3xl border border-cream/20 bg-pine p-6 shadow-2xl text-cream space-y-4 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-cream/10">
-              <h3 className="font-display text-base font-bold text-cream">Clinical Visit Charting &amp; EHR</h3>
-              <button onClick={() => setShowConsultModal(false)} className="text-cream/50 hover:text-cream">
+          <div className="w-full max-w-xl rounded-3xl border border-[#dce6db] bg-white p-6 shadow-2xl text-[#162720] space-y-4 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf3ec]">
+              <h3 className="font-display text-base font-bold text-[#11382b]">Clinical Visit Charting &amp; EHR</h3>
+              <button onClick={() => setShowConsultModal(false)} className="text-[#7f998b] hover:text-[#11382b]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={submitConsultation} className="space-y-3.5">
               <div>
-                <label className="text-[11px] font-bold text-cream/60 uppercase">Patient *</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Patient *</label>
                 <select
                   required
                   value={newConsult.patientId}
                   onChange={(e) => setNewConsult({ ...newConsult, patientId: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-pine p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 >
                   <option value="">Select Patient…</option>
                   {appointments.map((a) => (
@@ -771,86 +773,86 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-cream/60 uppercase">Chief Complaint *</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Chief Complaint *</label>
                 <input
                   type="text"
                   required
                   value={newConsult.chiefComplaint}
                   onChange={(e) => setNewConsult({ ...newConsult, chiefComplaint: e.target.value })}
                   placeholder="e.g. Tension headache and cervical spine stiffness"
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold text-cream/60 uppercase">Blood Pressure</label>
+                  <label className="text-[10px] font-bold text-[#436252] uppercase">Blood Pressure</label>
                   <input
                     type="text"
                     value={newConsult.bloodPressure}
                     onChange={(e) => setNewConsult({ ...newConsult, bloodPressure: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-1.5 text-xs text-cream focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-cream/60 uppercase">Heart Rate</label>
+                  <label className="text-[10px] font-bold text-[#436252] uppercase">Heart Rate</label>
                   <input
                     type="text"
                     value={newConsult.heartRate}
                     onChange={(e) => setNewConsult({ ...newConsult, heartRate: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-1.5 text-xs text-cream focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-cream/60 uppercase">Temperature</label>
+                  <label className="text-[10px] font-bold text-[#436252] uppercase">Temperature</label>
                   <input
                     type="text"
                     value={newConsult.temperature}
                     onChange={(e) => setNewConsult({ ...newConsult, temperature: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-1.5 text-xs text-cream focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-cream/60 uppercase">Clinical Examination Notes *</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Clinical Examination Notes *</label>
                 <textarea
                   required
                   rows={3}
                   value={newConsult.clinicalNotes}
                   onChange={(e) => setNewConsult({ ...newConsult, clinicalNotes: e.target.value })}
                   placeholder="Physical exam findings, neurological status, auscultation…"
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-cream/60 uppercase">Physician Diagnosis * (Human)</label>
+                <label className="text-[11px] font-bold text-[#436252] uppercase">Physician Diagnosis * (Human)</label>
                 <input
                   type="text"
                   required
                   value={newConsult.diagnosis}
                   onChange={(e) => setNewConsult({ ...newConsult, diagnosis: e.target.value })}
                   placeholder="Primary clinical diagnosis rendered by attending physician"
-                  className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                  className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-cream/60 uppercase">Medication</label>
+                  <label className="text-[11px] font-bold text-[#436252] uppercase">Medication</label>
                   <input
                     type="text"
                     value={newConsult.medication}
                     onChange={(e) => setNewConsult({ ...newConsult, medication: e.target.value })}
                     placeholder="e.g. Naproxen 500mg"
-                    className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-cream/60 uppercase">Dosage</label>
+                  <label className="text-[11px] font-bold text-[#436252] uppercase">Dosage</label>
                   <input
                     type="text"
                     value={newConsult.dosage}
                     onChange={(e) => setNewConsult({ ...newConsult, dosage: e.target.value })}
                     placeholder="e.g. 1 tab PO BID with meals"
-                    className="mt-1 w-full rounded-xl border border-cream/20 bg-cream/5 p-2 text-xs text-cream focus:outline-none"
+                    className="mt-1 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] p-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -858,14 +860,14 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                 <button
                   type="button"
                   onClick={() => setShowConsultModal(false)}
-                  className="rounded-full border border-cream/20 px-4 py-2 text-xs font-semibold text-cream/70 hover:bg-cream/10"
+                  className="rounded-full border border-[#dce6db] px-4 py-2 text-xs font-semibold text-[#567364] hover:bg-[#f2f6f1]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={consultBusy}
-                  className="rounded-full bg-gold px-4 py-2 text-xs font-semibold text-pine hover:bg-gold/90 disabled:opacity-50"
+                  className="rounded-full bg-[#11382b] px-4 py-2 text-xs font-bold text-white hover:bg-[#184838] shadow-xs disabled:opacity-50"
                 >
                   {consultBusy ? "Saving…" : "Save & Finalize Record"}
                 </button>

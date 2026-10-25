@@ -1023,64 +1023,22 @@ export function PatientPortal({
             </button>
           </nav>
 
-          {/* DYNAMIC BOTTOM FOOTER CAPSULE IN SIDEBAR */}
-          <div className="mt-auto pt-4 border-t border-white/10 space-y-3">
-            {/* Dynamic Live Clinic Status Pill */}
-            <button
-              onClick={() => setShowInfoModal(true)}
-              className="w-full text-left rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 p-2.5 transition-colors text-xs"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-semibold text-white text-[11px]">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Reception Open</span>
-                </span>
-                <span className="text-[10px] text-[#d49b35] hover:underline">Details →</span>
-              </div>
-              <p className="mt-1 text-[10px] text-white/60">
-                {clinicInfo["hours"] ?? "Mon–Fri 8:00–18:00"}
-              </p>
-            </button>
-
-            {/* User Profile Mini-Card with Quick Switcher Trigger */}
-            <div className="flex items-center justify-between rounded-xl bg-white/5 p-2.5">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#d49b35] text-pine font-bold text-xs">
+          {/* USER & CLINIC STATUS CAPSULE IN SIDEBAR */}
+          <div className="mt-auto pt-4 border-t border-white/10 space-y-2.5">
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-3">
+              <div className="flex items-center gap-3">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] font-bold text-xs shadow-xs">
                   {currentUser?.name ? currentUser.name[0] : "P"}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-semibold text-white">
                     {signedIn ? currentUser?.name : "Guest Patient"}
                   </p>
-                  <p className="text-[10px] text-white/50 capitalize truncate">
-                    {signedIn ? `${currentUser?.role} Mode` : "Demo Mode"}
+                  <p className="text-[10px] text-emerald-300 font-medium capitalize truncate flex items-center gap-1.5 mt-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span>{signedIn ? `${currentUser?.role} Active` : "Reception Open"}</span>
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowDemoModal(true)}
-                  className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 text-[10px] font-semibold"
-                  title="Switch Demo Role"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                </button>
-                {signedIn ? (
-                  <SignOutButton
-                    redirectTo="/"
-                    className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 text-[10px] font-medium"
-                  />
-                ) : (
-                  <a
-                    href="/login"
-                    className="px-2.5 py-1 rounded-md bg-[#d49b35] hover:bg-[#e2aa45] text-[#11382b] text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors"
-                    title="Sign In to Portal"
-                  >
-                    <LogIn className="h-3 w-3" />
-                    <span>Sign In</span>
-                  </a>
-                )}
               </div>
             </div>
           </div>
@@ -1133,11 +1091,11 @@ export function PatientPortal({
             </div>
           </div>
 
-          {/* Dynamic Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Right Action Cluster */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Search input in non-chat views */}
             {activeTab !== "chat" && activeTab !== "safety" && activeTab !== "profile" && (
-              <div className="relative w-40 sm:w-56">
+              <div className="relative w-36 sm:w-52">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6c8a7b]" />
                 <input
                   type="text"
@@ -1149,10 +1107,11 @@ export function PatientPortal({
               </div>
             )}
 
-            {/* Quick Demo Switcher Button for Judges */}
+            {/* Role Switcher Pill */}
             <button
               onClick={() => setShowDemoModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
+              title="Switch demo account role"
             >
               <RefreshCw className="h-3 w-3 text-[#d49b35]" />
               <span className="hidden sm:inline">Switch Role</span>
@@ -1161,50 +1120,33 @@ export function PatientPortal({
             {/* Quick Info & Hours Modal Launcher */}
             <button
               onClick={() => setShowInfoModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
+              title="Clinic hours and address"
             >
-              <Info className="h-3 w-3 text-[#d49b35]" />
-              <span className="hidden sm:inline">Clinic Info</span>
+              <Info className="h-3.5 w-3.5 text-[#3f5f4f]" />
+              <span className="hidden md:inline">Clinic Info</span>
             </button>
-
-            {/* Emergency Hotline Button */}
-            <a
-              href={`tel:${clinicInfo["phone"] ?? "+15550104477"}`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
-            >
-              <Phone className="h-3 w-3" />
-              <span className="hidden md:inline">Hotline</span>
-            </a>
 
             {/* Universal Sign In / Account Status */}
             {signedIn ? (
               <div className="flex items-center gap-2">
-                <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-[#11382b] bg-white border border-[#d6e3d5] rounded-full px-3 py-1 font-medium">
+                <div className="hidden sm:flex items-center gap-2 text-xs text-[#11382b] bg-[#f3f7f2] border border-[#d6e3d5] rounded-full px-3 py-1">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold">{currentUser?.name}</span>
-                </span>
+                  <span className="font-semibold truncate max-w-[120px]">{currentUser?.name}</span>
+                </div>
                 <SignOutButton
                   redirectTo="/"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <a
-                  href="/login"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-3.5 py-1 text-xs font-bold text-white hover:bg-[#1a4a3a] shadow-xs transition-colors"
-                >
-                  <LogIn className="h-3.5 w-3.5" />
-                  <span>Sign In</span>
-                </a>
-                <a
-                  href="/login"
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors"
-                >
-                  <UserPlus className="h-3 w-3 text-[#d49b35]" />
-                  <span>Register</span>
-                </a>
-              </div>
+              <a
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#1a4a3a] shadow-xs transition-colors cursor-pointer"
+              >
+                <LogIn className="h-3.5 w-3.5 text-[#d49b35]" />
+                <span>Sign In</span>
+              </a>
             )}
           </div>
         </header>

@@ -1,6 +1,6 @@
 # Evaluation results
 
-Last executed: 2026-10-25T19:33:48.522Z (via `npx tsx scripts/run-eval.ts` or the staff dashboard)
+Last executed: 2026-10-25T20:25:19.175Z (via `npx tsx scripts/run-eval.ts` or the staff dashboard)
 
 **44/44 passed (100%) — critical failures: 0**
 

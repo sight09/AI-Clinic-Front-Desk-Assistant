@@ -206,12 +206,36 @@ button:focus {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Subtle badge pulse */
-@keyframes subtle-glow {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4)); }
+/* Unified Clinic Design System Classes */
+.clinic-card {
+  background-color: #ffffff;
+  border: 1px solid #dce6db;
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(17, 56, 43, 0.04);
 }
-.live-pulse {
-  animation: subtle-glow 2.5s ease-in-out infinite;
+
+.clinic-card-elevated {
+  background-color: #ffffff;
+  border: 1px solid #d4dfd3;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(17, 56, 43, 0.06), 0 8px 10px -6px rgba(17, 56, 43, 0.04);
 }
+
+.clinic-table-th {
+  background-color: #f3f7f2;
+  color: #436252;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.75rem 1.25rem;
+}
+
+.clinic-table-td {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.8125rem;
+  color: #1a2f26;
+  border-top: 1px solid #edf3eb;
+}
+
 
