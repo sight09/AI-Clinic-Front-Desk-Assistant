@@ -20,8 +20,20 @@ import { scanForRedFlags, type RedFlagRule } from "@/lib/safety/redflags";
 import { answerFromCorpus, type FaqEntry } from "@/lib/faq/service";
 import { extractIntake } from "@/lib/intake/extract";
 import { createSummary } from "@/lib/summary/service";
-import { listAvailability } from "@/lib/booking/service";
+import { listAvailability, listAppointmentsFor } from "@/lib/booking/service";
 import { normalizeText } from "@/lib/safety/redflags";
+
+export type ToolCallExecution = {
+  tool:
+    | "check_availability"
+    | "list_my_appointments"
+    | "request_cancellation"
+    | "query_clinic_faq"
+    | "record_intake_symptoms";
+  status: "success" | "denied" | "error";
+  summary: string;
+  parameters?: Record<string, unknown>;
+};
 
 export type AssistantResponse =
   | {
@@ -30,16 +42,23 @@ export type AssistantResponse =
       grounded: boolean;
       faqId: string | null;
       score: number;
+      toolCalls?: ToolCallExecution[];
     }
-  | { type: "fallback"; message: string; grounded: false }
+  | { type: "fallback"; message: string; grounded: false; toolCalls?: ToolCallExecution[] }
   | {
       type: "escalation";
       message: string;
       rule: { phrase: string; category: string; approvalNote: string };
       disclaimer: string;
+      toolCalls?: ToolCallExecution[];
     }
-  | { type: "refusal"; message: string; flags: string[] }
-  | { type: "auth_required"; message: string; intent: "intake" | "booking" }
+  | { type: "refusal"; message: string; flags: string[]; toolCalls?: ToolCallExecution[] }
+  | {
+      type: "auth_required";
+      message: string;
+      intent: "intake" | "booking" | "my_appointments" | "cancellation";
+      toolCalls?: ToolCallExecution[];
+    }
   | {
       type: "intake";
       message: string;
@@ -48,13 +67,31 @@ export type AssistantResponse =
       extraction: unknown;
       summaryDraft: string;
       engine: "llm" | "rule_fallback";
+      toolCalls?: ToolCallExecution[];
     }
   | {
       type: "booking";
       message: string;
       slots: { slotId: string; startAt: string; providerName: string; departmentName: string }[];
+      idempotencySeed?: string;
+      toolCalls?: ToolCallExecution[];
     }
-  | { type: "booking_help"; message: string };
+  | { type: "booking_help"; message: string; toolCalls?: ToolCallExecution[] }
+  | {
+      type: "appointments_action";
+      action: "view" | "cancellation";
+      message: string;
+      appointments: {
+        id: string;
+        startAt: string;
+        providerName: string;
+        departmentName: string;
+        status: string;
+        reason: string;
+        cancellationReason?: string | null;
+      }[];
+      toolCalls?: ToolCallExecution[];
+    };
 
 const REFUSAL_MESSAGE =
   "I can help with clinic questions, intake and appointments, but I can't act " +
@@ -102,19 +139,80 @@ async function loadApprovedFaqs(): Promise<FaqEntry[]> {
 
 /* ------------------------------- intent routing ----------------------------- */
 
-type Intent = "booking" | "intake" | "faq";
+type Intent = "booking" | "my_appointments" | "cancellation" | "intake" | "faq";
 
 export function classifyIntent(text: string): Intent {
   const t = normalizeText(text);
+
+  // Informational FAQ queries about clinic cancellation rules
+  const isFaqCancelQuery =
+    t.includes("how do i cancel") ||
+    t.includes("how can i cancel") ||
+    t.includes("how to cancel") ||
+    t.includes("cancellation policy") ||
+    t.includes("cancellation fee") ||
+    t.includes("cancellation rules");
+
+  if (isFaqCancelQuery) return "faq";
+
+  const cancellationSignals = [
+    "cancel my appointment",
+    "cancel appointment",
+    "cancel booking",
+    "cancel my booking",
+    "reschedule",
+    "change appointment",
+    "move appointment",
+    "cancel visit",
+    "cancel this appointment",
+  ];
+  if (cancellationSignals.some((s) => t.includes(s))) return "cancellation";
+
+  const myAppointmentsSignals = [
+    "my appointment",
+    "my appointments",
+    "my booking",
+    "my bookings",
+    "show my appointment",
+    "show my appointments",
+    "check my appointment",
+    "check my appointments",
+    "when is my appointment",
+    "upcoming appointment",
+    "upcoming appointments",
+    "view my appointments",
+    "list my appointments",
+    "my schedule",
+  ];
+  if (myAppointmentsSignals.some((s) => t.includes(s))) return "my_appointments";
+
   const bookingSignals = [
-    "book", "appointment", "schedule", "slot", "available", "availability",
-    "reschedule", "cancel my appointment", "see a doctor", "see the doctor",
+    "book",
+    "appointment",
+    "schedule",
+    "slot",
+    "available",
+    "availability",
+    "see a doctor",
+    "see the doctor",
     "earliest",
+    "make an appointment",
   ];
   const intakeSignals = [
-    "i have", "i feel", "i've been", "i am experiencing", "suffering",
-    "pain", "symptom", "sick", "unwell", "fever", "hurts", "ache",
+    "i have",
+    "i feel",
+    "i've been",
+    "i am experiencing",
+    "suffering",
+    "pain",
+    "symptom",
+    "sick",
+    "unwell",
+    "fever",
+    "hurts",
+    "ache",
   ];
+
   if (bookingSignals.some((s) => t.includes(s))) return "booking";
   if (intakeSignals.some((s) => t.includes(s))) return "intake";
   return "faq";
@@ -181,6 +279,126 @@ export async function handleAssistantMessage(opts: {
   // 3) Intent routing (deterministic).
   const intent = classifyIntent(text);
 
+  // --- INTENT: CANCELLATION OR RESCHEDULE REQUEST ---
+  if (intent === "cancellation") {
+    if (!opts.user) {
+      return {
+        status: 200,
+        body: {
+          type: "auth_required",
+          intent: "cancellation",
+          message:
+            "To review or cancel your appointment, please sign in first so I can securely access your booking.",
+          requestId,
+        },
+      };
+    }
+
+    const all = await listAppointmentsFor(opts.user.id, opts.user.role);
+    const cancellable = all.filter(
+      (a) =>
+        a.status === "confirmed" ||
+        a.status === "cancellation_requested" ||
+        a.status === "reschedule_requested",
+    );
+
+    await db.insert(auditLogs).values({
+      actorId: opts.user.id,
+      actorRole: opts.user.role,
+      action: "ai_tool_call",
+      entityType: "tool",
+      entityId: "request_cancellation",
+      meta: { tool: "request_cancellation", cancellableFound: cancellable.length },
+    });
+
+    return {
+      status: 200,
+      body: {
+        type: "appointments_action",
+        action: "cancellation",
+        message:
+          cancellable.length > 0
+            ? "I retrieved your active bookings from our clinic schedule. Choose the appointment you want to cancel or reschedule below, and provide a brief reason for front-desk review:"
+            : "You don't have any active confirmed appointments scheduled right now to cancel or reschedule. If you'd like to book a new appointment, let me know!",
+        appointments: cancellable.map((a) => ({
+          id: a.id,
+          startAt: a.startAt,
+          providerName: a.providerName,
+          departmentName: a.departmentName,
+          status: a.status,
+          reason: a.reason,
+          cancellationReason: a.cancellationReason,
+        })),
+        toolCalls: [
+          {
+            tool: "request_cancellation",
+            status: "success",
+            summary: `Retrieved ${cancellable.length} cancellable appointment(s) from database`,
+          },
+        ],
+        requestId,
+      },
+    };
+  }
+
+  // --- INTENT: VIEW MY APPOINTMENTS ---
+  if (intent === "my_appointments") {
+    if (!opts.user) {
+      return {
+        status: 200,
+        body: {
+          type: "auth_required",
+          intent: "my_appointments",
+          message:
+            "I can check your upcoming appointments — please sign in first so I can locate your patient record.",
+          requestId,
+        },
+      };
+    }
+
+    const all = await listAppointmentsFor(opts.user.id, opts.user.role);
+    const active = all.filter((a) => a.status !== "cancelled");
+
+    await db.insert(auditLogs).values({
+      actorId: opts.user.id,
+      actorRole: opts.user.role,
+      action: "ai_tool_call",
+      entityType: "tool",
+      entityId: "list_my_appointments",
+      meta: { tool: "list_my_appointments", count: active.length },
+    });
+
+    return {
+      status: 200,
+      body: {
+        type: "appointments_action",
+        action: "view",
+        message:
+          active.length > 0
+            ? `You have ${active.length} active appointment${active.length === 1 ? "" : "s"} scheduled. Here are the details:`
+            : "You don't have any upcoming appointments scheduled right now. Would you like to check availability and book one?",
+        appointments: active.map((a) => ({
+          id: a.id,
+          startAt: a.startAt,
+          providerName: a.providerName,
+          departmentName: a.departmentName,
+          status: a.status,
+          reason: a.reason,
+          cancellationReason: a.cancellationReason,
+        })),
+        toolCalls: [
+          {
+            tool: "list_my_appointments",
+            status: "success",
+            summary: `Retrieved ${active.length} active appointment(s) from patient record`,
+          },
+        ],
+        requestId,
+      },
+    };
+  }
+
+  // --- INTENT: BOOKING ---
   if (intent === "booking") {
     if (!opts.user) {
       return {
@@ -195,6 +413,16 @@ export async function handleAssistantMessage(opts: {
       };
     }
     const slots = await listAvailability({ limit: 8 });
+
+    await db.insert(auditLogs).values({
+      actorId: opts.user.id,
+      actorRole: opts.user.role,
+      action: "ai_tool_call",
+      entityType: "tool",
+      entityId: "check_availability",
+      meta: { tool: "check_availability", slotsFound: slots.length },
+    });
+
     if (slots.length === 0) {
       return {
         status: 200,
@@ -202,6 +430,13 @@ export async function handleAssistantMessage(opts: {
           type: "booking_help",
           message:
             "There are no open slots in the next two weeks. Please contact the front desk, or ask me to add you to the waitlist.",
+          toolCalls: [
+            {
+              tool: "check_availability",
+              status: "success",
+              summary: "Checked provider calendar; 0 open slots found",
+            },
+          ],
           requestId,
         },
       };
@@ -218,11 +453,20 @@ export async function handleAssistantMessage(opts: {
           providerName: s.providerName,
           departmentName: s.departmentName,
         })),
+        idempotencySeed: requestId ?? crypto.randomUUID(),
+        toolCalls: [
+          {
+            tool: "check_availability",
+            status: "success",
+            summary: `Live calendar query returned ${slots.length} available slots`,
+          },
+        ],
         requestId,
       },
     };
   }
 
+  // --- INTENT: INTAKE SYMPTOM REPORTING ---
   if (intent === "intake") {
     if (!opts.user) {
       return {
@@ -260,6 +504,19 @@ export async function handleAssistantMessage(opts: {
       entityId: summary.summaryId,
       meta: { engine, missingCount: extraction.missing_information.length },
     });
+    await db.insert(auditLogs).values({
+      actorId: opts.user.id,
+      actorRole: opts.user.role,
+      action: "ai_tool_call",
+      entityType: "tool",
+      entityId: "record_intake_symptoms",
+      meta: {
+        tool: "record_intake_symptoms",
+        engine,
+        symptomsReported: extraction.symptoms_as_reported.length,
+      },
+    });
+
     return {
       status: 200,
       body: {
@@ -273,18 +530,52 @@ export async function handleAssistantMessage(opts: {
         extraction,
         summaryDraft: summary.draft,
         engine,
+        toolCalls: [
+          {
+            tool: "record_intake_symptoms",
+            status: "success",
+            summary: `Captured ${extraction.symptoms_as_reported.length} symptoms via ${engine}; draft prepared for clinician`,
+          },
+        ],
         requestId,
       },
     };
   }
 
-  // 4) Default: grounded FAQ.
+  // --- INTENT: FAQ KNOWLEDGE RETRIEVAL ---
   const corpus = await loadApprovedFaqs();
   const result = answerFromCorpus(text, corpus);
+
+  await db.insert(auditLogs).values({
+    actorId: opts.user?.id ?? null,
+    actorRole: opts.user?.role ?? "anonymous",
+    action: "ai_tool_call",
+    entityType: "tool",
+    entityId: "query_clinic_faq",
+    meta: {
+      tool: "query_clinic_faq",
+      grounded: result.grounded,
+      faqId: result.faqId,
+      score: result.score,
+    },
+  });
+
   if (!result.grounded) {
     return {
       status: 200,
-      body: { type: "fallback", message: result.answer, grounded: false, requestId },
+      body: {
+        type: "fallback",
+        message: result.answer,
+        grounded: false,
+        toolCalls: [
+          {
+            tool: "query_clinic_faq",
+            status: "denied",
+            summary: "No approved clinic policy matched; safe fallback triggered",
+          },
+        ],
+        requestId,
+      },
     };
   }
   return {
@@ -295,6 +586,13 @@ export async function handleAssistantMessage(opts: {
       grounded: true,
       faqId: result.faqId,
       score: result.score,
+      toolCalls: [
+        {
+          tool: "query_clinic_faq",
+          status: "success",
+          summary: `Matched approved FAQ entry (${Math.round(result.score * 100)}% confidence score)`,
+        },
+      ],
       requestId,
     },
   };

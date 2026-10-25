@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { RoleSwitcherModal } from "@/components/auth/role-switcher-modal";
 import {
   Activity,
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
   Menu,
   Pill,
   Plus,
+  RefreshCw,
   Save,
   ShieldCheck,
   Sparkles,
@@ -58,6 +60,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
 
   // Clinical Document Visit Modal
   const [showConsultModal, setShowConsultModal] = useState(false);
@@ -348,7 +351,15 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowRoleModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/25 transition-colors cursor-pointer"
+            >
+              <RefreshCw className="h-3 w-3" />
+              <span>Switch Role</span>
+            </button>
             <a href="/?preview=patient" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
               ← Preview Patient Front Desk
             </a>
@@ -802,6 +813,12 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string }
           </div>
         </div>
       )}
+
+      <RoleSwitcherModal
+        isOpen={showRoleModal}
+        onClose={() => setShowRoleModal(false)}
+        currentEmail="clinician@demo.clinic"
+      />
     </div>
   );
 }

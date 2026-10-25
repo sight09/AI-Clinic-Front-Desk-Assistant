@@ -64,6 +64,7 @@ import {
 import { BotanicalCorner, ClinicLogoIcon } from "@/components/ui/botanical-art";
 import { ClinicalMascot } from "@/components/ui/clinical-mascot";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { RoleSwitcherModal } from "@/components/auth/role-switcher-modal";
 
 /* --------------------------------- types ---------------------------------- */
 
@@ -85,6 +86,23 @@ export type Extraction = {
   clarification_question: string | null;
 };
 
+export type ToolCallInfo = {
+  tool: string;
+  status: "success" | "denied" | "error";
+  summary: string;
+  parameters?: Record<string, unknown>;
+};
+
+export type ApptSummary = {
+  id: string;
+  startAt: string;
+  providerName: string;
+  departmentName: string;
+  status: string;
+  reason: string;
+  cancellationReason?: string | null;
+};
+
 export type AssistantPayload =
   | { kind: "faq"; grounded: boolean; faqId: string | null }
   | { kind: "escalation"; disclaimer: string; approvalNote: string }
@@ -93,6 +111,11 @@ export type AssistantPayload =
   | { kind: "intake"; extraction: Extraction; summaryDraft: string; engine: string }
   | { kind: "booking"; slots: SlotInfo[]; idem: string }
   | { kind: "booked"; label: string; duplicate: boolean }
+  | {
+      kind: "appointments_action";
+      action: "view" | "cancellation";
+      appointments: ApptSummary[];
+    }
   | { kind: "error" };
 
 export interface Msg {
@@ -100,6 +123,7 @@ export interface Msg {
   role: "user" | "assistant";
   text: string;
   payload?: AssistantPayload;
+  toolCalls?: ToolCallInfo[];
   at: number;
 }
 
@@ -219,11 +243,12 @@ export type ProviderProfile = {
 };
 
 const QUICK_PROMPTS = [
+  { label: "My Appointments", query: "Can you show my upcoming appointments?" },
+  { label: "Cancel a Visit", query: "I need to cancel or reschedule my appointment." },
   { label: "Opening hours", query: "What are your opening hours and weekend schedule?" },
   { label: "Book a visit", query: "I'd like to book an appointment with a doctor." },
   { label: "Report symptoms", query: "I have had a mild headache and fever for two days." },
   { label: "Insurance & copay", query: "Do you accept health insurance and how does billing work?" },
-  { label: "Meet Dr. Chen", query: "Tell me about Dr. Maya Chen and her specialty." },
 ];
 
 const DEMO_USERS = [
@@ -417,6 +442,7 @@ export function PatientPortal({
       });
       const data = await res.json();
       const id = crypto.randomUUID();
+      const toolCalls = Array.isArray(data.toolCalls) ? (data.toolCalls as ToolCallInfo[]) : undefined;
 
       if (data.type === "faq") {
         push({
@@ -424,6 +450,7 @@ export function PatientPortal({
           role: "assistant",
           text: data.message,
           at: Date.now(),
+          toolCalls,
           payload: { kind: "faq", grounded: data.grounded, faqId: data.faqId },
         });
       } else if (data.type === "escalation") {
@@ -432,6 +459,7 @@ export function PatientPortal({
           role: "assistant",
           text: data.message,
           at: Date.now(),
+          toolCalls,
           payload: {
             kind: "escalation",
             disclaimer: data.disclaimer,
@@ -444,6 +472,7 @@ export function PatientPortal({
           role: "assistant",
           text: data.message,
           at: Date.now(),
+          toolCalls,
           payload: { kind: "refusal" },
         });
       } else if (data.type === "auth_required") {
@@ -452,6 +481,7 @@ export function PatientPortal({
           role: "assistant",
           text: data.message,
           at: Date.now(),
+          toolCalls,
           payload: { kind: "auth", intent: data.intent },
         });
       } else if (data.type === "intake") {
@@ -460,6 +490,7 @@ export function PatientPortal({
           role: "assistant",
           text: data.message,
           at: Date.now(),
+          toolCalls,
           payload: {
             kind: "intake",
             extraction: data.extraction,
@@ -468,19 +499,35 @@ export function PatientPortal({
           },
         });
       } else if (data.type === "booking") {
+        const seed = data.idempotencySeed ?? data.requestId ?? `idem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         push({
           id,
           role: "assistant",
           text: data.message,
           at: Date.now(),
-          payload: { kind: "booking", slots: data.slots, idem: data.idempotencySeed },
+          toolCalls,
+          payload: { kind: "booking", slots: data.slots, idem: seed },
+        });
+      } else if (data.type === "appointments_action") {
+        push({
+          id,
+          role: "assistant",
+          text: data.message,
+          at: Date.now(),
+          toolCalls,
+          payload: {
+            kind: "appointments_action",
+            action: data.action,
+            appointments: data.appointments ?? [],
+          },
         });
       } else {
         push({
           id,
           role: "assistant",
-          text: "I'm having trouble processing that right now. Please try again or ask our front-desk reception.",
+          text: data.message || "I'm having trouble processing that right now. Please try again or ask our front-desk reception.",
           at: Date.now(),
+          toolCalls,
           payload: { kind: "error" },
         });
       }
@@ -511,13 +558,18 @@ export function PatientPortal({
     }
     setBusy(true);
     try {
+      const generatedIdem =
+        idem && typeof idem === "string" && idem.trim().length >= 8
+          ? idem.trim()
+          : `chat-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           slotId: slot.slotId,
           reason: "Chat front-desk booking",
-          idempotencyKey: idem,
+          idempotencyKey: generatedIdem,
         }),
       });
       const data = await res.json();
@@ -564,6 +616,27 @@ export function PatientPortal({
       }
     } catch {
       /* noop */
+    }
+  }
+
+  async function requestCancellationFromChat(appointmentId: string, reason: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/appointments/${appointmentId}/request-cancellation`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      if (res.ok) {
+        await refreshAllData();
+        return true;
+      } else {
+        const err = await res.json();
+        alert(err?.error?.message ?? "Failed to submit cancellation request.");
+        return false;
+      }
+    } catch {
+      alert("Network error submitting cancellation request.");
+      return false;
     }
   }
 
@@ -1254,7 +1327,13 @@ export function PatientPortal({
               ) : (
                 <div className="max-w-3xl mx-auto space-y-4 w-full">
                   {messages.map((m) => (
-                    <ChatMessage key={m.id} msg={m} busy={busy} onBook={bookSlot} />
+                    <ChatMessage
+                      key={m.id}
+                      msg={m}
+                      busy={busy}
+                      onBook={bookSlot}
+                      onRequestCancellation={requestCancellationFromChat}
+                    />
                   ))}
 
                   {busy && (
@@ -2485,62 +2564,11 @@ export function PatientPortal({
       )}
 
       {/* B. DYNAMIC 1-CLICK DEMO ACCOUNT SWITCHER MODAL */}
-      {showDemoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-[32px] border border-[#d6e2d4] bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#e7ede5] pb-3">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#11382b]" />
-                <h3 className="font-display text-base font-bold text-[#11382b]">
-                  Switch Demo Account (All 4 Roles)
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowDemoModal(false)}
-                className="grid h-8 w-8 place-items-center rounded-full hover:bg-gray-100 text-gray-500"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-[#527060]">
-              Click any synthetic role below to test the complete multi-user clinic management system instantly (password: <code className="bg-gray-100 px-1 py-0.5 rounded">demo1234</code>):
-            </p>
-
-            <div className="space-y-2">
-              {DEMO_USERS.map((u) => (
-                <button
-                  key={u.email}
-                  onClick={() => switchDemoUser(u.email)}
-                  className={`w-full flex items-center justify-between rounded-2xl border p-3.5 text-xs text-left transition-all ${
-                    currentUser?.email === u.email
-                      ? "border-[#11382b] bg-[#edf5ec] shadow-xs"
-                      : "border-[#e2ede0] bg-[#fbfdfa] hover:border-[#11382b]/40 hover:bg-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#11382b] text-white font-bold text-xs">
-                      {u.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#11382b]">{u.name}</p>
-                      <p className="text-[11px] text-[#557564]">{u.email}</p>
-                    </div>
-                  </div>
-
-                  <span className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-[#11382b] border border-[#d6e3d5]">
-                    {u.badge}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="pt-2 text-[11px] text-[#6b8b7a] text-center">
-              Evaluator shortcut: automatically executes session login and reloads permissions.
-            </div>
-          </div>
-        </div>
-      )}
+      <RoleSwitcherModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        currentEmail={currentUser?.email}
+      />
 
       {/* C. PAYMENT & RECEIPT MODAL */}
       {payingInvoice && (
@@ -2783,12 +2811,18 @@ function ChatMessage({
   msg,
   busy,
   onBook,
+  onRequestCancellation,
 }: {
   msg: Msg;
   busy: boolean;
   onBook: (slot: SlotInfo, idem: string) => void;
+  onRequestCancellation?: (id: string, reason: string) => Promise<boolean>;
 }) {
   const isUser = msg.role === "user";
+  const [cancellingApptId, setCancellingApptId] = useState<string | null>(null);
+  const [cancelReasonText, setCancelReasonText] = useState("");
+  const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+  const [submittedApptIds, setSubmittedApptIds] = useState<string[]>([]);
 
   if (isUser) {
     return (
@@ -2811,6 +2845,26 @@ function ChatMessage({
 
       {/* Bubble */}
       <div className="max-w-[86%] space-y-3">
+        {/* Real-Time Tool Execution Badges */}
+        {msg.toolCalls && msg.toolCalls.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pl-1">
+            {msg.toolCalls.map((tc, idx) => (
+              <div
+                key={idx}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50/90 px-3 py-1 text-[10.5px] font-mono font-medium text-emerald-950 shadow-2xs"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold uppercase tracking-wider text-[9px] text-emerald-800">
+                  AI Tool Executed:
+                </span>
+                <span className="font-semibold text-emerald-900">{tc.tool}</span>
+                <span className="text-emerald-400">·</span>
+                <span className="text-emerald-800/90">{tc.summary}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div
           className={`relative rounded-[24px] rounded-tl-xs px-5 py-4 text-sm leading-relaxed ${
             isEscalation
@@ -2917,13 +2971,140 @@ function ChatMessage({
                   <button
                     onClick={() => onBook(slot, p.idem)}
                     disabled={busy}
-                    className="rounded-full bg-[#11382b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1a4a3a] disabled:opacity-50 shadow-2xs active:scale-95 transition-transform"
+                    className="rounded-full bg-[#11382b] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#1a4a3a] disabled:opacity-50 shadow-2xs active:scale-95 transition-transform cursor-pointer"
                   >
                     Book This Slot
                   </button>
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Interactive Appointments Action (View or Cancellation Routing) */}
+        {p?.kind === "appointments_action" && (
+          <div className="rounded-[24px] border border-[#cfe0cf] bg-white p-4 shadow-xs space-y-3">
+            <p className="text-xs font-bold text-[#11382b] flex items-center gap-1.5">
+              <CalendarDays className="h-4 w-4 text-[#d49b35]" />
+              <span>
+                {p.action === "cancellation"
+                  ? "Active Bookings (Select to Request Cancellation / Reschedule):"
+                  : "Your Scheduled Appointments:"}
+              </span>
+            </p>
+
+            {p.appointments.length === 0 ? (
+              <p className="text-xs text-[#557564] py-2">
+                No active appointments found in your record.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {p.appointments.map((appt) => {
+                  const isRequested =
+                    submittedApptIds.includes(appt.id) ||
+                    appt.status === "cancellation_requested" ||
+                    appt.status === "reschedule_requested";
+                  const isCurrentCancelling = cancellingApptId === appt.id;
+
+                  return (
+                    <div
+                      key={appt.id}
+                      className="rounded-2xl border border-[#e1ece0] bg-[#f8faf6] p-3 text-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-[#11382b]">{fmtTime(appt.startAt)}</p>
+                          <p className="text-[11px] text-[#557564]">
+                            {appt.providerName} · {appt.departmentName}
+                          </p>
+                          {appt.reason && (
+                            <p className="text-[10px] text-[#6b8b7a] italic mt-0.5">
+                              Reason: {appt.reason}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                              isRequested
+                                ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                : appt.status === "confirmed"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-gray-100 text-gray-700"
+                            }`}
+                          >
+                            {isRequested ? "Review Pending" : appt.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {p.action === "cancellation" && !isRequested && (
+                        <>
+                          {!isCurrentCancelling ? (
+                            <div className="flex justify-end pt-1">
+                              <button
+                                onClick={() => {
+                                  setCancellingApptId(appt.id);
+                                  setCancelReasonText("");
+                                }}
+                                className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                              >
+                                Request Cancellation
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-2 pt-2 border-t border-[#e2ece0] space-y-2">
+                              <input
+                                type="text"
+                                placeholder="Reason for cancellation (e.g. Schedule conflict, feeling better)..."
+                                value={cancelReasonText}
+                                onChange={(e) => setCancelReasonText(e.target.value)}
+                                className="w-full text-xs rounded-xl border border-gray-300 p-2 focus:border-rose-500 focus:outline-none bg-white text-[#11382b]"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setCancellingApptId(null)}
+                                  className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 cursor-pointer"
+                                >
+                                  Back
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isSubmittingCancel}
+                                  onClick={async () => {
+                                    setIsSubmittingCancel(true);
+                                    const ok = await onRequestCancellation?.(
+                                      appt.id,
+                                      cancelReasonText.trim() ||
+                                        "Patient requested cancellation via AI Front-Desk",
+                                    );
+                                    setIsSubmittingCancel(false);
+                                    if (ok) {
+                                      setSubmittedApptIds((prev) => [...prev, appt.id]);
+                                      setCancellingApptId(null);
+                                    }
+                                  }}
+                                  className="rounded-full bg-rose-600 px-3.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 shadow-2xs cursor-pointer"
+                                >
+                                  {isSubmittingCancel ? "Submitting…" : "Confirm Request"}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {isRequested && (
+                        <p className="text-[10.5px] text-amber-800 font-medium pt-1">
+                          ✓ Cancellation request routed to receptionist queue. You will receive an automated notification once approved.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

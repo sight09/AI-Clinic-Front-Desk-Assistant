@@ -71,7 +71,14 @@ function LoginForm() {
       }
       const next = params.get("next");
       const isStaffRole = data.user?.role === "clinician" || data.user?.role === "admin" || data.user?.role === "receptionist";
-      const target = (next && next !== "/") ? next : (isStaffRole ? "/staff" : "/");
+      let target = isStaffRole ? "/staff" : "/";
+      if (next && next !== "/" && !next.includes("preview=patient")) {
+        if (isStaffRole && (next.startsWith("/staff") || next.startsWith("/api"))) {
+          target = next;
+        } else if (!isStaffRole && !next.startsWith("/staff")) {
+          target = next;
+        }
+      }
       window.location.assign(target);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-in failed");

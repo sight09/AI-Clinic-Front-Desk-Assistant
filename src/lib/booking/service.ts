@@ -160,6 +160,15 @@ export async function bookAppointment(opts: {
 
       const appointmentId = inserted[0]!.id;
 
+      // Fetch provider info for automated notifications
+      const provRow = await tx
+        .select({ name: providers.name, userId: providers.userId })
+        .from(slots)
+        .innerJoin(providers, eq(providers.id, slots.providerId))
+        .where(eq(slots.id, opts.slotId))
+        .limit(1);
+      const doctorName = provRow[0]?.name ?? "your physician";
+
       // Schedule the 24h reminder deterministically (duplicate-proof key).
       const startAt = new Date(row!.start_at);
       await tx
@@ -170,6 +179,24 @@ export async function bookAppointment(opts: {
           scheduledFor: new Date(startAt.getTime() - 24 * 60 * 60 * 1000),
         })
         .onConflictDoNothing();
+
+      // Automated patient confirmation notification
+      await tx.insert(notifications).values({
+        userId: opts.patientId,
+        title: "Appointment Confirmed",
+        message: `Your appointment with Dr. ${doctorName} is confirmed for ${startAt.toLocaleString()}. An automated 24-hour reminder has been scheduled.`,
+        type: "booking_confirmed",
+      });
+
+      // Automated clinician notification (if provider has associated user account)
+      if (provRow[0]?.userId) {
+        await tx.insert(notifications).values({
+          userId: provRow[0].userId,
+          title: "New Appointment Booked",
+          message: `A new patient consultation has been scheduled for ${startAt.toLocaleString()}.`,
+          type: "schedule_updated",
+        });
+      }
 
       await tx.insert(auditLogs).values({
         actorId: opts.patientId,
@@ -686,21 +713,36 @@ export async function respondToOffer(opts: {
  * Dispatch due reminders through the configured channel (mock channel records
  * delivery state only — no real messages are sent anywhere).
  */
-export async function dispatchDueReminders(now = new Date()): Promise<{
+export async function dispatchDueReminders(
+  now = new Date(),
+  lookaheadHours = 0,
+): Promise<{
   sent: number;
   skipped: number;
   failed: number;
 }> {
+  const targetDate =
+    lookaheadHours > 0
+      ? new Date(now.getTime() + lookaheadHours * 60 * 60 * 1000)
+      : now;
+
   const due = await db
     .select({
       id: reminders.id,
       appointmentId: reminders.appointmentId,
       status: reminders.status,
       apptStatus: appointments.status,
+      patientId: appointments.patientId,
+      startAt: slots.startAt,
+      providerName: providers.name,
+      patientName: users.name,
     })
     .from(reminders)
     .innerJoin(appointments, eq(appointments.id, reminders.appointmentId))
-    .where(and(eq(reminders.status, "pending"), lte(reminders.scheduledFor, now)));
+    .innerJoin(slots, eq(slots.id, appointments.slotId))
+    .innerJoin(providers, eq(providers.id, slots.providerId))
+    .innerJoin(users, eq(users.id, appointments.patientId))
+    .where(and(eq(reminders.status, "pending"), lte(reminders.scheduledFor, targetDate)));
 
   let sent = 0;
   let skipped = 0;
@@ -716,13 +758,22 @@ export async function dispatchDueReminders(now = new Date()): Promise<{
       .update(reminders)
       .set({ status: "sent", sentAt: new Date() })
       .where(and(eq(reminders.id, r.id), eq(reminders.status, "pending")));
+
+    // Automated patient notification:
+    await db.insert(notifications).values({
+      userId: r.patientId,
+      title: "Upcoming Appointment Reminder",
+      message: `Automated Reminder: You have an appointment with Dr. ${r.providerName} scheduled for ${new Date(r.startAt).toLocaleString()}.`,
+      type: "reminder",
+    });
+
     await db.insert(auditLogs).values({
       actorId: null,
       actorRole: "system",
       action: "reminder_sent",
       entityType: "reminder",
       entityId: r.id,
-      meta: { channel: "mock" },
+      meta: { channel: "mock", patientId: r.patientId, appointmentId: r.appointmentId },
     });
     sent += 1;
   }

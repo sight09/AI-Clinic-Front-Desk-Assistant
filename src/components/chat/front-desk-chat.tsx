@@ -33,6 +33,23 @@ type Extraction = {
   clarification_question: string | null;
 };
 
+type ToolCallInfo = {
+  tool: string;
+  status: "success" | "denied" | "error";
+  summary: string;
+  parameters?: Record<string, unknown>;
+};
+
+type ApptItem = {
+  id: string;
+  startAt: string;
+  providerName: string;
+  departmentName: string;
+  status: string;
+  reason: string;
+  cancellationReason?: string | null;
+};
+
 type AssistantPayload =
   | { kind: "faq"; grounded: boolean; faqId: string | null }
   | { kind: "escalation"; disclaimer: string; approvalNote: string }
@@ -41,6 +58,7 @@ type AssistantPayload =
   | { kind: "intake"; extraction: Extraction; summaryDraft: string; engine: string }
   | { kind: "booking"; slots: SlotInfo[]; idem: string }
   | { kind: "booked"; label: string; duplicate: boolean }
+  | { kind: "appointments_action"; action: "view" | "cancellation"; appointments: ApptItem[] }
   | { kind: "error" };
 
 interface Msg {
@@ -48,6 +66,7 @@ interface Msg {
   role: "user" | "assistant";
   text: string;
   payload?: AssistantPayload;
+  toolCalls?: ToolCallInfo[];
   at: number;
 }
 
@@ -146,21 +165,24 @@ export function FrontDeskChat({ signedIn }: { signedIn: boolean }) {
       });
       const data = await res.json();
       const id = crypto.randomUUID();
+      const toolCalls = Array.isArray(data.toolCalls) ? (data.toolCalls as ToolCallInfo[]) : undefined;
 
       if (data.type === "faq") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "faq", grounded: data.grounded, faqId: data.faqId } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "faq", grounded: data.grounded, faqId: data.faqId } });
       } else if (data.type === "escalation") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "escalation", disclaimer: data.disclaimer, approvalNote: data.rule?.approvalNote ?? "" } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "escalation", disclaimer: data.disclaimer, approvalNote: data.rule?.approvalNote ?? "" } });
       } else if (data.type === "refusal") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "refusal" } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "refusal" } });
       } else if (data.type === "auth_required") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "auth", intent: data.intent } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "auth", intent: data.intent } });
       } else if (data.type === "intake") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "intake", extraction: data.extraction, summaryDraft: data.summaryDraft, engine: data.engine } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "intake", extraction: data.extraction, summaryDraft: data.summaryDraft, engine: data.engine } });
       } else if (data.type === "booking") {
-        push({ id, role: "assistant", text: data.message, at: Date.now(), payload: { kind: "booking", slots: data.slots, idem: crypto.randomUUID() } });
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "booking", slots: data.slots, idem: crypto.randomUUID() } });
+      } else if (data.type === "appointments_action") {
+        push({ id, role: "assistant", text: data.message, at: Date.now(), toolCalls, payload: { kind: "appointments_action", action: data.action, appointments: data.appointments ?? [] } });
       } else {
-        push({ id, role: "assistant", text: data.message ?? "Sorry, something went wrong on our side. Please try again.", at: Date.now(), payload: data.type === "fallback" ? { kind: "faq", grounded: false, faqId: null } : undefined });
+        push({ id, role: "assistant", text: data.message ?? "Sorry, something went wrong on our side. Please try again.", at: Date.now(), toolCalls, payload: data.type === "fallback" ? { kind: "faq", grounded: false, faqId: null } : undefined });
       }
     } catch {
       push({ id: crypto.randomUUID(), role: "assistant", text: "I couldn't reach the front desk service just now. Please try again in a moment.", at: Date.now(), payload: { kind: "error" } });
@@ -173,10 +195,15 @@ export function FrontDeskChat({ signedIn }: { signedIn: boolean }) {
     if (busy) return;
     setBusy(true);
     try {
+      const generatedIdem =
+        idem && typeof idem === "string" && idem.trim().length >= 8
+          ? idem.trim()
+          : `desk-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slotId: slot.slotId, reason: "Booked via front-desk assistant", idempotencyKey: idem }),
+        body: JSON.stringify({ slotId: slot.slotId, reason: "Booked via front-desk assistant", idempotencyKey: generatedIdem }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message ?? "Booking failed");

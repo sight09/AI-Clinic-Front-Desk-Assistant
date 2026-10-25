@@ -18,39 +18,83 @@ export async function GET() {
 
 const BookSchema = z
   .object({
-    slotId: z.string().uuid(),
-    reason: z.string().max(300).default(""),
-    idempotencyKey: z.string().min(8).max(80),
+    slotId: z.string().uuid("Invalid slot ID"),
+    reason: z.string().max(300).optional().default(""),
+    idempotencyKey: z.string().min(1).max(120).optional(),
     patientId: z.string().uuid().optional(),
+    patientEmail: z.string().email().optional(),
   })
-  .strict();
+  .passthrough();
 
 export async function POST(req: Request) {
   try {
     // Patients book for themselves; receptionists and admins can book on behalf of patients
     const user = requireRole(await getCurrentUser(), ["patient", "receptionist", "admin"]);
-    const parsed = BookSchema.safeParse(await req.json().catch(() => ({})));
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = BookSchema.safeParse(rawBody);
     if (!parsed.success) {
-      throw new AppError("bad_request", "Invalid booking request. Choose a slot and try again.");
+      const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
+      throw new AppError("bad_request", `Invalid booking request (${issues}). Choose a slot and try again.`);
     }
 
-    const targetPatientId =
-      user.role === "receptionist" || user.role === "admin"
-        ? parsed.data.patientId ?? user.id
-        : user.id;
+    const { db } = await import("@/db");
+    const { slots, providers, departments, users, notifications } = await import("@/db/schema");
+    const { eq, or, sql } = await import("drizzle-orm");
+
+    let finalSlotId = parsed.data.slotId;
+
+    // Check if slotId exists in slots table; if not, check if it's a providerId with open slots
+    const slotExists = await db
+      .select({ id: slots.id })
+      .from(slots)
+      .where(eq(slots.id, finalSlotId))
+      .limit(1);
+
+    if (!slotExists[0]) {
+      // Check if slotId was actually a providerId
+      const provSlot = await db
+        .select({ id: slots.id })
+        .from(slots)
+        .where(sql`provider_id = ${finalSlotId} AND status = 'open' AND start_at > now()`)
+        .orderBy(slots.startAt)
+        .limit(1);
+
+      if (provSlot[0]) {
+        finalSlotId = provSlot[0].id;
+      } else {
+        throw new AppError("not_found", "The selected slot is no longer available. Please choose another slot.");
+      }
+    }
+
+    let targetPatientId = user.id;
+    if (user.role === "receptionist" || user.role === "admin") {
+      if (parsed.data.patientId) {
+        targetPatientId = parsed.data.patientId;
+      } else if (parsed.data.patientEmail) {
+        const found = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, parsed.data.patientEmail.toLowerCase()))
+          .limit(1);
+        if (found[0]) {
+          targetPatientId = found[0].id;
+        }
+      }
+    }
+
+    const idempotencyKey =
+      parsed.data.idempotencyKey && parsed.data.idempotencyKey.trim().length >= 8
+        ? parsed.data.idempotencyKey.trim()
+        : `booking-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
     const result = await bookAppointment({
       patientId: targetPatientId,
-      slotId: parsed.data.slotId,
-      reason: parsed.data.reason,
-      idempotencyKey: `${user.id}:${parsed.data.idempotencyKey}`,
+      slotId: finalSlotId,
+      reason: parsed.data.reason ?? "",
+      idempotencyKey: `${user.id}:${idempotencyKey}`,
     });
 
     if (!result.duplicate) {
-      const { db } = await import("@/db");
-      const { notifications, slots, providers, departments, users } = await import("@/db/schema");
-      const { eq, or } = await import("drizzle-orm");
-
       // Query slot and provider context for clear notification text
       const slotDetails = await db
         .select({
@@ -61,7 +105,7 @@ export async function POST(req: Request) {
         .from(slots)
         .innerJoin(providers, eq(slots.providerId, providers.id))
         .innerJoin(departments, eq(providers.departmentId, departments.id))
-        .where(eq(slots.id, parsed.data.slotId))
+        .where(eq(slots.id, finalSlotId))
         .limit(1);
 
       const slotInfo = slotDetails[0];

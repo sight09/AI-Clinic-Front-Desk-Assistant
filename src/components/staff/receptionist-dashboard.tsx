@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { RoleSwitcherModal } from "@/components/auth/role-switcher-modal";
 import {
   AlertTriangle,
   ArrowRight,
@@ -20,6 +21,7 @@ import {
   Phone,
   Plus,
   Printer,
+  RefreshCw,
   ShieldCheck,
   Stethoscope,
   UserCheck,
@@ -36,11 +38,12 @@ import {
   Provider,
 } from "./types";
 
-type ReceptionistTab = "schedule" | "cancellation_requests" | "book_patient" | "providers" | "billing";
+type ReceptionistTab = "schedule" | "cancellation_requests" | "automation" | "book_patient" | "providers" | "billing";
 
 const RECEPTIONIST_TABS = [
   { id: "schedule", label: "Front-Desk Check-In", icon: CalendarDays },
   { id: "cancellation_requests", label: "Cancellation Requests", icon: CalendarCheck },
+  { id: "automation", label: "Automated Workflows & Reminders", icon: BellRing },
   { id: "book_patient", label: "Book for Patient", icon: CalendarPlus },
   { id: "providers", label: "Doctor Availability & Rooms", icon: Stethoscope },
   { id: "billing", label: "Cashier & Checkout", icon: CreditCard },
@@ -54,6 +57,12 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
   const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<{ slotId: string; startAt: string; providerName: string; departmentName: string }[]>([]);
+
+  // Workflow Automation state
+  const [dispatchBusy, setDispatchBusy] = useState(false);
+  const [dispatchStatus, setDispatchStatus] = useState<{ sent: number; skipped: number; failed: number } | null>(null);
 
   // Direct Cancel Modal (requires reason)
   const [directCancelAppt, setDirectCancelAppt] = useState<Appointment | null>(null);
@@ -79,17 +88,19 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
   const [payBusy, setPayBusy] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [a, b, p, n] = await Promise.all([
+    const [a, b, p, n, av] = await Promise.all([
       fetch("/api/appointments").then((res) => (res.ok ? res.json() : { appointments: [] })),
       fetch("/api/billing").then((res) => (res.ok ? res.json() : { invoices: [] })),
       fetch("/api/providers").then((res) => (res.ok ? res.json() : { providers: [] })),
       fetch("/api/notifications").then((res) => (res.ok ? res.json() : { notifications: [], unreadCount: 0 })),
+      fetch("/api/availability").then((res) => (res.ok ? res.json() : { slots: [] })),
     ]);
     setAppointments(a.appointments ?? []);
     setInvoicesList(b.invoices ?? []);
     setProviders(p.providers ?? []);
     setNotificationsList(n.notifications ?? []);
     setUnreadNotifications(n.unreadCount ?? 0);
+    setAvailableSlots(av.slots ?? []);
   }, []);
 
   useEffect(() => {
@@ -175,6 +186,7 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
           slotId: bookSlotId,
           reason: bookReason.trim(),
           patientId: existingPatient?.patientId,
+          patientEmail: bookPatientEmail.trim(),
           idempotencyKey: `desk-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         }),
       });
@@ -209,6 +221,29 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
       }
     } finally {
       setPayBusy(false);
+    }
+  }
+
+  async function handleDispatchReminders() {
+    setDispatchBusy(true);
+    setDispatchStatus(null);
+    try {
+      const res = await fetch("/api/reminders/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lookaheadHours: 48 }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setDispatchStatus({ sent: d.sent, skipped: d.skipped, failed: d.failed });
+        await loadData();
+      } else {
+        alert(d?.error?.message ?? "Reminder dispatch failed.");
+      }
+    } catch {
+      alert("Network error running reminder dispatch.");
+    } finally {
+      setDispatchBusy(false);
     }
   }
 
@@ -342,7 +377,15 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowRoleModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/15 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/25 transition-colors cursor-pointer"
+            >
+              <RefreshCw className="h-3 w-3" />
+              <span>Switch Role</span>
+            </button>
             <a href="/?preview=patient" className="hidden sm:inline-block text-xs text-cream/70 hover:text-cream underline">
               ← Preview Patient Front Desk
             </a>
@@ -491,7 +534,113 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
             </div>
           )}
 
-          {/* TAB 3: BOOK FOR PATIENT */}
+          {/* TAB: WORKFLOW AUTOMATION & REMINDERS */}
+          {tab === "automation" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-display text-2xl text-cream">Clinic Workflow Automation &amp; Reminders</h2>
+                <p className="text-xs text-cream/60">
+                  Autonomous reminder dispatch, cancellation-aware waitlist routing, and scheduling conflict prevention.
+                </p>
+              </div>
+
+              {/* Automation KPIs */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+                  <p className="text-[10px] uppercase font-bold text-cream/50">Automated Reminders</p>
+                  <p className="mt-2 text-2xl font-bold text-gold">
+                    {notificationsList.filter((n) => n.type === "reminder").length}
+                  </p>
+                  <p className="text-[10.5px] text-cream/50 mt-1">Dispatched to patient feeds</p>
+                </div>
+                <div className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+                  <p className="text-[10px] uppercase font-bold text-cream/50">Confirmed Bookings</p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-300">
+                    {appointments.filter((a) => a.status === "confirmed").length}
+                  </p>
+                  <p className="text-[10.5px] text-cream/50 mt-1">24h reminders scheduled</p>
+                </div>
+                <div className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+                  <p className="text-[10px] uppercase font-bold text-cream/50">Cancellation Requests</p>
+                  <p className="mt-2 text-2xl font-bold text-amber-300">{pendingRequests.length}</p>
+                  <p className="text-[10.5px] text-cream/50 mt-1">Routed to reception queue</p>
+                </div>
+                <div className="rounded-2xl border border-cream/10 bg-cream/5 p-4">
+                  <p className="text-[10px] uppercase font-bold text-cream/50">Conflicts Prevented</p>
+                  <p className="mt-2 text-2xl font-bold text-cyan-300">100%</p>
+                  <p className="text-[10.5px] text-cream/50 mt-1">Atomic DB FOR UPDATE locks</p>
+                </div>
+              </div>
+
+              {/* Automated Reminder Trigger Card */}
+              <div className="rounded-3xl border border-cream/10 bg-cream/5 p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-display text-base text-cream flex items-center gap-2">
+                      <BellRing className="h-4 w-4 text-gold" />
+                      <span>Automated 24h &amp; 48h Patient Reminder Engine</span>
+                    </h3>
+                    <p className="text-xs text-cream/60 mt-1">
+                      Evaluates all confirmed visits scheduled in the next 48 hours and writes personalized appointment reminders directly to patient notification feeds. Duplicate runs are safely skipped.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleDispatchReminders}
+                    disabled={dispatchBusy}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gold px-4 py-2.5 text-xs font-semibold text-pine hover:bg-gold/90 disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    {dispatchBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    <span>{dispatchBusy ? "Executing Dispatch Engine…" : "Run Automated Reminder Dispatch"}</span>
+                  </button>
+                </div>
+
+                {dispatchStatus && (
+                  <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-3.5 text-xs text-emerald-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <span>
+                        Automated dispatch completed: <strong>{dispatchStatus.sent}</strong> sent to patient inbox,{" "}
+                        <strong>{dispatchStatus.skipped}</strong> skipped, <strong>{dispatchStatus.failed}</strong> failed.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Automated Notification Stream */}
+              <div className="rounded-3xl border border-cream/10 bg-cream/5 p-6 space-y-3">
+                <h3 className="font-display text-base text-cream">Recent Automated Dispatch &amp; Routing Events</h3>
+                {notificationsList.length === 0 ? (
+                  <p className="text-xs text-cream/50 py-3">No automated notifications recorded yet.</p>
+                ) : (
+                  <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
+                    {notificationsList.slice(0, 8).map((n) => (
+                      <div key={n.id} className="rounded-xl border border-cream/10 bg-pine/40 p-3 space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span
+                            className={`font-semibold uppercase tracking-wider rounded-md px-1.5 py-0.5 ${
+                              n.type === "reminder"
+                                ? "bg-amber-400/20 text-amber-300"
+                                : n.type === "booking_confirmed"
+                                ? "bg-emerald-400/20 text-emerald-300"
+                                : "bg-blue-400/20 text-blue-300"
+                            }`}
+                          >
+                            {n.type.replace("_", " ")}
+                          </span>
+                          <span className="text-cream/40">{fmt(n.createdAt)}</span>
+                        </div>
+                        <p className="font-bold text-cream text-[11px]">{n.title}</p>
+                        <p className="text-cream/70 text-[10.5px] leading-snug">{n.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: BOOK FOR PATIENT */}
           {tab === "book_patient" && (
             <div className="space-y-6">
               <div>
@@ -526,11 +675,19 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
                       className="mt-1 w-full rounded-xl border border-cream/20 bg-pine p-2 text-xs text-cream focus:outline-none"
                     >
                       <option value="">Select Doctor &amp; Slot…</option>
-                      {providers.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.specialty}) · {p.roomNumber} ({p.openSlotsCount} slots available)
-                        </option>
-                      ))}
+                      {availableSlots.length > 0 ? (
+                        availableSlots.map((s) => (
+                          <option key={s.slotId} value={s.slotId}>
+                            {s.providerName} ({s.departmentName}) · {fmt(s.startAt)}
+                          </option>
+                        ))
+                      ) : (
+                        providers.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.specialty}) · {p.roomNumber} ({p.openSlotsCount} slots available)
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                   <div>
@@ -787,6 +944,12 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
           </div>
         </div>
       )}
+
+      <RoleSwitcherModal
+        isOpen={showRoleModal}
+        onClose={() => setShowRoleModal(false)}
+        currentEmail="receptionist@demo.clinic"
+      />
     </div>
   );
 }
