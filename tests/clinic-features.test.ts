@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assertOwnership, isStaff } from "@/lib/auth/service";
+import { appointmentStatusEnum } from "@/db/schema";
 
 describe("Clinic management features & authorization", () => {
   it("recognizes receptionists as clinic staff", () => {
@@ -67,17 +68,20 @@ describe("Clinic management features & authorization", () => {
     expect(total).toBe(125);
   });
 
-  it("validates appointment lifecycle statuses", () => {
-    const validStatuses = [
+  it("validates appointment lifecycle statuses against database schema", () => {
+    const expectedStatuses = [
       "confirmed",
       "checked_in",
       "in_consultation",
       "completed",
       "cancelled",
       "no_show",
+      "cancellation_requested",
+      "reschedule_requested",
     ];
-    for (const s of validStatuses) {
-      expect(validStatuses.includes(s)).toBe(true);
+    expect(appointmentStatusEnum.enumValues).toEqual(expectedStatuses);
+    for (const s of expectedStatuses) {
+      expect(appointmentStatusEnum.enumValues).toContain(s);
     }
   });
 

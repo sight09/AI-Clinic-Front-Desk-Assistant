@@ -86,4 +86,16 @@ describe("input guard", () => {
     expect(() => checkRateLimit("t")).toThrow(AppError);
     resetRateLimits();
   });
+
+  it("rate limiter supports custom thresholds for sensitive endpoints like login brute-force protection", () => {
+    resetRateLimits();
+    const loginKey = "auth:login:test@demo.clinic";
+    for (let i = 0; i < 5; i++) {
+      checkRateLimit(loginKey, 5, 60_000, "Too many login attempts.");
+    }
+    expect(() =>
+      checkRateLimit(loginKey, 5, 60_000, "Too many login attempts.")
+    ).toThrow(AppError);
+    resetRateLimits();
+  });
 });

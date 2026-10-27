@@ -2,30 +2,57 @@ import type { SVGProps } from "react";
 
 export function ClinicLogoIcon({
   className = "h-10 w-10",
-  pulseColor = "#d49b35",
+  pulseColor = "#34d399",
 }: {
   className?: string;
   pulseColor?: string;
 }) {
   return (
     <div
-      className={`grid place-items-center rounded-full bg-[#11382b] shadow-sm shrink-0 ${className}`}
+      className={`grid place-items-center rounded-full bg-[#004d40] shadow-sm shrink-0 ${className}`}
     >
       <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke={pulseColor}
-        strokeWidth="2.2"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="h-1/2 w-1/2"
+        className="h-3/5 w-3/5"
       >
-        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-        <path d="M3.5 12h3l2-3.5 3 7 2-4.5 2 2h4" strokeWidth="1.8" />
+        {/* Robot Assistant Icon */}
+        <path d="M12 8V4H8" />
+        <rect width="16" height="12" x="4" y="8" rx="2" />
+        <path d="M2 14h2" />
+        <path d="M20 14h2" />
+        <path d="M9 13v2" />
+        <path d="M15 13v2" />
       </svg>
     </div>
   );
 }
+
+export function RobotChatIcon({
+  className = "h-9 w-9",
+}: {
+  className?: string;
+  strokeColor?: string;
+}) {
+  return (
+    <div
+      className={`relative shrink-0 flex items-center justify-center select-none ${className}`}
+      title="Afiya Clinical Mascot"
+    >
+      <img
+        src="/mascot.svg"
+        alt="Afiya Mascot"
+        className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(17,56,43,0.18)] transition-transform hover:scale-110 duration-200"
+      />
+    </div>
+  );
+}
+
+export const MascotChatIcon = RobotChatIcon;
 
 export function BotanicalHero(props: SVGProps<SVGSVGElement>) {
   return (

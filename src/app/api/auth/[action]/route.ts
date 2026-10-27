@@ -13,6 +13,7 @@ import {
   hashPassword,
 } from "@/lib/auth/service";
 import { AppError, toSafeErrorPayload } from "@/lib/errors";
+import { checkRateLimit } from "@/lib/safety/guard";
 
 const LoginSchema = z
   .object({
@@ -100,6 +101,14 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
     if (action === "login") {
       const parsed = LoginSchema.safeParse(await req.json().catch(() => ({})));
       if (!parsed.success) throw new AppError("bad_request", "Enter a valid email and password.");
+
+      // Brute-force protection: rate limit login attempts per email (5 attempts per minute)
+      checkRateLimit(
+        `auth:login:${parsed.data.email.toLowerCase()}`,
+        5,
+        60_000,
+        "Too many login attempts. Please wait a minute and try again."
+      );
 
       const rows = await db.select().from(users).where(eq(users.email, parsed.data.email)).limit(1);
       const user = rows[0];
@@ -194,8 +203,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
 
       await db.insert(notifications).values({
         userId: newUser.id,
-        title: "Welcome to Meridian Grove Clinic",
-        message: "Your patient account has been created. You can now book visits, consult our front-desk assistant, and view your records.",
+        title: "Welcome to Afiya Clinic",
+        message: "Your patient account has been created. Better Care Starts Here. You can now book visits, consult our front-desk assistant, and view your records.",
         type: "system",
       });
 

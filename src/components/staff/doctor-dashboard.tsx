@@ -19,7 +19,10 @@ import {
   HeartPulse,
   LayoutDashboard,
   Loader2,
+  LogOut,
   Menu,
+  PanelLeft,
+  PanelLeftClose,
   Pill,
   Plus,
   RefreshCw,
@@ -27,6 +30,7 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
+  User,
   UserCheck,
   Users,
   X,
@@ -53,6 +57,7 @@ const DOCTOR_TABS = [
 
 export function DoctorDashboard({ user }: { user: { name: string; role: string; email?: string } }) {
   const [tab, setTab] = useState<DoctorTab>("schedule");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [records, setRecords] = useState<VisitRecord[]>([]);
   const [summaries, setSummaries] = useState<Summary[]>([]);
@@ -61,6 +66,19 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.assign("/login");
+    }
+  }
 
   // Clinical Document Visit Modal
   const [showConsultModal, setShowConsultModal] = useState(false);
@@ -235,107 +253,194 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
   return (
     <div className="min-h-screen bg-[#f8faf7] text-[#162720] antialiased flex flex-col lg:flex-row">
       {/* ----------------- DOCTOR SIDEBAR ----------------- */}
+      {/* ----------------- DOCTOR SIDEBAR ----------------- */}
+      {/* ----------------- DOCTOR SIDEBAR ----------------- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-[#0c241c] text-[#e3ece6] border-r border-[#16382b] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between ${
-          mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-40 transform bg-[#0c241c] text-[#e3ece6] border-r border-[#16382b] transition-all duration-300 ease-in-out lg:static flex flex-col justify-between shrink-0 overflow-hidden ${
+          sidebarOpen ? "w-64 xl:w-72" : "w-16 lg:w-[70px]"
+        } ${
+          mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-4 flex flex-col flex-1 overflow-y-auto thin-scroll">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] shadow-xs font-bold">
-                <Stethoscope className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-sm font-bold text-white tracking-tight">Meridian Grove</p>
-                <p className="text-[9.5px] uppercase tracking-wider text-[#d49b35] font-semibold">Clinician Station</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/70"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Clinician Card */}
-          <div className="mt-3.5 rounded-xl border border-white/10 bg-white/5 p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-purple-400/20 text-purple-300 font-bold text-xs">
-                MD
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-white truncate">{user.name}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <p className="text-[10px] text-emerald-300 capitalize font-medium">Attending Physician Active</p>
+        {sidebarOpen ? (
+          <div className="p-4 flex flex-col flex-1 overflow-y-auto thin-scroll">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <img src="/afiya-icon.png" alt="Afiya" className="h-8 w-8 object-contain rounded-lg" />
+                <div>
+                  <p className="font-display text-sm font-bold text-white tracking-tight">Afiya</p>
+                  <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Clinician Station</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="mt-4 space-y-1">
-            <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
-              Clinical Workspace
-            </p>
-            {DOCTOR_TABS.map((t) => {
-              const Icon = t.icon;
-              const active = tab === t.id;
-              const count = t.id === "review" ? drafts.length : t.id === "notifications" ? notificationsList.length : 0;
-              return (
+              <div className="flex items-center gap-1">
                 <button
-                  key={t.id}
-                  onClick={() => {
-                    setTab(t.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
-                    active
-                      ? "bg-[#184838] text-white shadow-xs font-semibold"
-                      : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
-                  }`}
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  title="Collapse sidebar"
+                  className="hidden lg:flex p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
-                    <span>{t.label}</span>
-                  </div>
-                  {count > 0 && (
-                    <span className="rounded-full bg-[#d49b35] px-2 py-0.5 text-[9.5px] font-bold text-[#11382b]">
-                      {count}
-                    </span>
-                  )}
+                  <PanelLeftClose className="h-4 w-4" />
                 </button>
-              );
-            })}
-          </nav>
-
-          {/* Quick Actions */}
-          <div className="mt-5 pt-3.5 border-t border-white/10 space-y-2">
-            <p className="px-2 text-[10px] font-bold tracking-wider text-white/40 uppercase">Clinical Actions</p>
-            <button
-              onClick={() => {
-                setShowConsultModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d49b35] to-[#c28b2a] px-3 py-2 text-xs font-bold text-[#11382b] hover:brightness-105 transition-all shadow-xs active:scale-98 cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Document Visit</span>
-            </button>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-auto pt-4 text-xs text-white/50 border-t border-white/10 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold text-white/80">Meridian Grove EHR</p>
-              <p className="text-[9.5px] text-white/40">Doctor Station · Certified</p>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/70"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+
+            {/* Navigation Links */}
+            <nav className="mt-4 space-y-1">
+              <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
+                Clinical Workspace
+              </p>
+              {DOCTOR_TABS.map((t) => {
+                const Icon = t.icon;
+                const active = tab === t.id;
+                const count = t.id === "review" ? drafts.length : t.id === "notifications" ? notificationsList.length : 0;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTab(t.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                      active
+                        ? "bg-[#184838] text-white shadow-xs font-semibold"
+                        : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      <span>{t.label}</span>
+                    </div>
+                    {count > 0 && (
+                      <span className="rounded-full bg-[#d49b35] px-2 py-0.5 text-[10px] font-bold text-[#11382b]">
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Quick Actions */}
+            <div className="mt-5 pt-3.5 border-t border-white/10 space-y-2">
+              <p className="px-2 text-[10px] font-bold tracking-wider text-white/40 uppercase">Clinical Actions</p>
+              <button
+                onClick={() => {
+                  setShowConsultModal(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d49b35] to-[#c28b2a] px-3 py-2 text-xs font-bold text-[#11382b] hover:brightness-105 transition-all shadow-xs active:scale-98 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Document Visit</span>
+              </button>
+            </div>
+
+            {/* Profile & Status Capsule at the Bottom */}
+            <div className="mt-auto pt-4 border-t border-white/10 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(true)}
+                className="w-full text-left rounded-xl border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors cursor-pointer group"
+                title="View Clinician Profile"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-400/20 text-emerald-300 font-bold text-xs group-hover:scale-105 transition-transform">
+                    MD
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-white truncate">{user.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <p className="text-[10px] text-emerald-300 capitalize font-medium">Attending Physician</p>
+                    </div>
+                  </div>
+                  <User className="h-3.5 w-3.5 text-white/40 group-hover:text-white transition-colors" />
+                </div>
+              </button>
+
+              <div className="pt-1 text-xs text-white/50 flex items-center justify-between px-1">
+                <div>
+                  <p className="text-[11px] font-semibold text-white/80">Afiya EHR</p>
+                  <p className="text-[10px] text-white/40">Doctor Station · Certified</p>
+                </div>
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center py-4 px-2 h-full justify-between">
+            <div className="flex flex-col items-center gap-4 w-full">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                title="Click to expand sidebar"
+                className="relative group h-10 w-10 rounded-xl hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer"
+              >
+                <img
+                  src="/afiya-icon.png"
+                  alt="Afiya"
+                  className="h-8 w-8 object-contain rounded-lg transition-all duration-200 group-hover:opacity-0 group-hover:scale-75"
+                />
+                <PanelLeft className="h-5 w-5 text-emerald-400 absolute opacity-0 scale-75 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100" />
+              </button>
+
+              <nav className="w-full space-y-1.5 mt-2">
+                {DOCTOR_TABS.map((t) => {
+                  const Icon = t.icon;
+                  const active = tab === t.id;
+                  const count = t.id === "review" ? drafts.length : t.id === "notifications" ? notificationsList.length : 0;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      title={t.label}
+                      className={`w-full relative flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer ${
+                        active
+                          ? "bg-[#184838] text-white shadow-xs"
+                          : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      {count > 0 && (
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#d49b35]" />
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="w-full pt-3 border-t border-white/10 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowConsultModal(true)}
+                  title="Document Visit"
+                  className="h-9 w-9 flex items-center justify-center rounded-xl bg-gradient-to-r from-[#d49b35] to-[#c28b2a] text-[#11382b] hover:brightness-105 transition-all shadow-xs cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full pt-3 border-t border-white/10 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(true)}
+                title={`Clinician: ${user.name}`}
+                className="h-8 w-8 rounded-lg bg-emerald-400/20 text-emerald-300 hover:bg-emerald-400/30 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
+              >
+                MD
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Main Canvas */}
@@ -344,7 +449,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-[#d6e2d4] bg-white text-[#11382b] hover:bg-[#edf5ec] shadow-2xs"
+              className="lg:hidden p-2 rounded-xl border border-[#d6e2d4] bg-white text-[#11382b] hover:bg-[#edf5ec] shadow-2xs cursor-pointer"
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -352,23 +457,8 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
               <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
                 {DOCTOR_TABS.find((t) => t.id === tab)?.label}
               </h2>
-              <p className="text-[10.5px] text-[#567364] mt-0.5">Physician Clinical Operations &amp; EHR Consultation</p>
+              <p className="text-[11px] text-[#567364] mt-0.5">Physician Clinical Operations &amp; EHR Consultation</p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <button
-              type="button"
-              onClick={() => setShowRoleModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
-            >
-              <RefreshCw className="h-3 w-3 text-[#d49b35]" />
-              <span>Switch Role</span>
-            </button>
-            <SignOutButton
-              redirectTo="/login"
-              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
-            />
           </div>
         </header>
 
@@ -655,7 +745,7 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                         <p className="text-xs text-[#d49b35] font-semibold">
                           {myProvider?.title || "Healthcare Provider"} · {myProvider?.specialty || "General Medicine"}
                         </p>
-                        <p className="text-[11px] text-[#7f998b] mt-0.5">Meridian Grove Clinic Staff</p>
+                        <p className="text-[11px] text-[#7f998b] mt-0.5">Afiya Clinic Staff · Better Care Starts Here</p>
                       </div>
                     </div>
 
@@ -882,6 +972,107 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
         onClose={() => setShowRoleModal(false)}
         currentEmail="clinician@demo.clinic"
       />
+
+      {/* ----------------- USER PROFILE MODAL ----------------- */}
+      {showUserProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-emerald-100">
+            <button
+              onClick={() => setShowUserProfileModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex flex-col items-center text-center">
+              <div className="h-16 w-16 rounded-2xl bg-[#0c241c] text-emerald-400 font-display font-bold text-2xl flex items-center justify-center shadow-md border border-[#16382b]">
+                MD
+              </div>
+              <h3 className="mt-3.5 text-base font-bold text-[#11382b]">{user.name}</h3>
+              <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Staff · Certified Clinician
+              </span>
+              <p className="mt-1 text-xs text-[#567364]">{user.email || "clinician@demo.clinic"}</p>
+            </div>
+
+            <div className="mt-5 space-y-2 border-t border-[#edf3ec] pt-4 text-xs">
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Staff ID</span>
+                <span className="font-semibold text-[#11382b]">CLN-9482-ATT</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Department</span>
+                <span className="font-semibold text-[#11382b]">Primary Care &amp; Internal Medicine</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Clinic Center</span>
+                <span className="font-semibold text-[#11382b]">Afiya Health Hub</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Session Status</span>
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Authenticated Active
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUserProfileModal(false);
+                  setShowSignOutConfirm(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sign Out of Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(false)}
+                className="w-full rounded-xl border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- SIGN OUT CONFIRMATION MODAL ----------------- */}
+      {showSignOutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-stone-200 text-center">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-600 mb-3.5">
+              <LogOut className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-bold text-stone-900">Are you sure you want to sign out?</h3>
+            <p className="mt-1.5 text-xs text-stone-500 leading-relaxed">
+              You will be safely logged out of your clinician workstation session.
+            </p>
+            <div className="mt-6 flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowSignOutConfirm(false)}
+                disabled={isSigningOut}
+                className="flex-1 rounded-xl border border-stone-200 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                disabled={isSigningOut}
+                className="flex-1 rounded-xl bg-rose-600 py-2.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {isSigningOut ? "Signing Out…" : "Yes, Sign Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

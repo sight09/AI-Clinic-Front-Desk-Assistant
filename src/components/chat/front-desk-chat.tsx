@@ -15,6 +15,7 @@ import {
   Send,
   ShieldAlert,
   Sparkles,
+  Bot,
   UserRound,
   X,
 } from "lucide-react";
@@ -107,23 +108,60 @@ function fmtTime(iso: string): string {
 
 /* ------------------------------- component --------------------------------- */
 
+const STORAGE_KEY = "afiya_chat_history_v1";
+
+const INITIAL_WELCOME: Msg = {
+  id: "welcome",
+  role: "assistant",
+  text:
+    "Hello, I'm the Afiya front-desk assistant. Better Care Starts Here. I can answer clinic questions, take your intake details, and book real appointments. " +
+    "I'm an administrative assistant — not a doctor — and I can't give medical advice.",
+  at: Date.now(),
+};
+
 export function FrontDeskChat({ signedIn }: { signedIn: boolean }) {
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text:
-        "Hello, I'm the Meridian Grove front-desk assistant. I can answer clinic questions, take your intake details, and book real appointments. " +
-        "I'm an administrative assistant — not a doctor — and I can't give medical advice.",
-      at: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Msg[]>([INITIAL_WELCOME]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [authed, setAuthed] = useState(signedIn);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Restore chat history from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+    } catch {
+      /* ignore storage read error */
+    }
+  }, []);
+
+  // Save chat history to localStorage (retain up to 20 recent messages)
+  useEffect(() => {
+    try {
+      if (messages.length > 1) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-20)));
+      }
+    } catch {
+      /* ignore storage write error */
+    }
+  }, [messages]);
+
+  const clearChat = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* noop */
+    }
+    setMessages([INITIAL_WELCOME]);
+  }, []);
 
   const refreshSide = useCallback(async () => {
     if (!authed) return;
@@ -268,10 +306,23 @@ export function FrontDeskChat({ signedIn }: { signedIn: boolean }) {
               <p className="text-[11px] tracking-[0.14em] text-sage uppercase">administrative · not medical advice</p>
             </div>
           </div>
-          <span className="flex items-center gap-1.5 rounded-full border border-cream/15 px-3 py-1 text-[11px] text-cream/70">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            live schedule
-          </span>
+          <div className="flex items-center gap-2">
+            {messages.length > 1 && (
+              <button
+                type="button"
+                onClick={clearChat}
+                className="flex items-center gap-1 rounded-full border border-cream/15 px-2.5 py-1 text-[11px] text-cream/70 hover:bg-cream/10 transition-colors"
+                title="Clear conversation history"
+              >
+                <RefreshCw className="h-3 w-3" />
+                reset
+              </button>
+            )}
+            <span className="flex items-center gap-1.5 rounded-full border border-cream/15 px-3 py-1 text-[11px] text-cream/70">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              live schedule
+            </span>
+          </div>
         </div>
 
         <div ref={scrollRef} className="thin-scroll h-[480px] space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
@@ -415,13 +466,22 @@ function MessageBubble({
 
   return (
     <div className="msg-in flex items-start gap-2.5">
-      <span
-        className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full ${
-          isEscalation ? "pulse-ring bg-pulse text-cream" : "bg-pine/8 text-pine"
-        }`}
-      >
-        {isEscalation ? <ShieldAlert className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
-      </span>
+      {isEscalation ? (
+        <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full pulse-ring bg-pulse text-cream">
+          <ShieldAlert className="h-4 w-4" />
+        </span>
+      ) : (
+        <div
+          className="mt-0.5 h-9 w-9 shrink-0 flex items-center justify-center select-none"
+          title="Afiya Clinical Mascot"
+        >
+          <img
+            src="/mascot.svg"
+            alt="Afiya Mascot"
+            className="h-full w-full object-contain drop-shadow-[0_2px_8px_rgba(17,56,43,0.18)] transition-transform hover:scale-110 duration-200"
+          />
+        </div>
+      )}
       <div className="max-w-[86%] space-y-3">
         <div
           className={`rounded-3xl rounded-tl-md px-5 py-3.5 text-sm leading-relaxed ${

@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="public/mascot.svg" alt="AI Clinic Assistant Mascot" width="180" />
+  <img src="public/afiya-logo.png" alt="Afiya — Better Care Starts Here" width="320" />
 
-  <h1>AI Clinic Front-Desk Assistant</h1>
+  <h1>Afiya — Better Care Starts Here</h1>
 
-  <p>An intelligent assistant for managing clinic appointments, healthcare operations, and improving patient experiences.</p>
+  <p>An intelligent AI Front-Desk Assistant and automation engine for modern clinic operations, appointment scheduling, and patient care.</p>
 
   <p>
     <strong>Final submission — Brolf Tech Remote Internship Challenge 2026, AI &amp; Automation track (PROJECT 3)</strong>
@@ -12,11 +12,9 @@
 
 ---
 
----
-
 ## AI & Automation Architecture Highlights
 
-Meridian Grove Clinic showcases full-stack **AI & Automation** engineering for healthcare front-desk administration:
+Afiya Clinic showcases full-stack **AI & Automation** engineering for healthcare front-desk administration:
 
 - **AI Front-Desk Assistant with Backend Tool Calling**:
   - The assistant executes 5 authorized backend tools: `check_availability`, `list_my_appointments`, `request_cancellation`, `query_clinic_faq`, and `record_intake_symptoms`.
@@ -24,7 +22,7 @@ Meridian Grove Clinic showcases full-stack **AI & Automation** engineering for h
   - Every tool execution is role-governed and recorded in `audit_logs` (`action: "ai_tool_call"`).
 - **Core Workflow Automation Engine**:
   - **Automated Booking Confirmations**: Dispatches immediate notification records to both patient and doctor inboxes upon successful reservation.
-  - **Automated 24h & 48h Reminder Dispatch**: Dedicated receptionist automation console with configurable lookahead sweeps, generating personalized appointment alerts directly in patient notification feeds.
+  - **Automated 24h & 48h Reminder Scheduling & Dispatch**: Appointment reminders are automatically scheduled into the DB with unique deduplication keys upon booking. In this MVP, mock reminder dispatch is triggered via the receptionist staff console or `/api/reminders/dispatch` (in production, a background cron job calls this route).
   - **Cancellation Routing & Waitlist Automation**: Patient cancellation requests made via chat route to front-desk review; on confirmation, expiring 15-minute slot offers cascade to waitlisted patients.
   - **Zero Double-Booking Conflict Prevention**: Atomic slot locking via PostgreSQL `FOR UPDATE` transactions prevents race conditions.
 - **Intelligent Clinic Operations & Evaluation Scorecard**:
@@ -45,9 +43,20 @@ Meridian Grove Clinic showcases full-stack **AI & Automation** engineering for h
 - **Deterministic Safety Escalation**: Pre-LLM red-flag detection rules for emergency symptoms (e.g. chest pain, breathing distress, severe bleeding) with instant emergency referral; non-match never presented as medical clearance.
 - **Clinician Summary Drafts**: Built strictly from validated intake facts, marked DRAFT, with server-side human review and approval enforced.
 - **Reminders & Waitlist Automation**: Cancellation-aware appointment reminders via mock channel and consent-gated expiring 15-minute waitlist offers.
-- **Regression & Safety Evaluation**: 42 Vitest unit tests + 44 executed automated safety benchmark cases (100% pass rate).
+- **Regression & Safety Evaluation**: 44 Vitest unit tests + 44 executed automated safety benchmark cases (100% pass rate).
 
 > **Not a medical device.** AI does not diagnose patients, prescribe medications, or recommend treatments. All seeded accounts and medical records use synthetic demo identities.
+
+---
+
+## AI Architecture & LLM Provider Modes
+
+The system uses a **safety-first, hybrid architecture**:
+- **Deterministic Pipeline**: Injection scanning, emergency red-flag symptom matching, intent routing, and clinic FAQ answers are strictly deterministic (retrieval-grounded from the DB) to guarantee zero medical policy hallucinations.
+- **LLM Refinement Layer (`extractIntake`)**: The LLM is used specifically for extracting patient-reported symptom details into strict Zod schemas (`IntakeExtractionSchema`). If the model fails or times out, a deterministic regex/rule-based fallback activates seamlessly.
+- **Provider Modes**:
+  - `AI_PROVIDER=mock` (default): Fast, deterministic extraction for offline development and local evaluation without external API keys.
+  - `AI_PROVIDER=openai`: Live calls to any OpenAI-compatible API (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` configurable for Groq, Ollama, DeepSeek, or OpenAI).
 
 ---
 
@@ -58,9 +67,9 @@ Meridian Grove Clinic showcases full-stack **AI & Automation** engineering for h
 | Framework | Next.js 16 (App Router, RSC + API route handlers) |
 | DB / ORM | PostgreSQL + Drizzle ORM |
 | Validation | Zod (strict validation across all input/output boundaries) |
-| Auth & Roles | scrypt password hashing, httpOnly partitioned session cookies, server-side role guards |
+| Auth & Roles | scrypt password hashing, brute-force rate limiting, httpOnly partitioned session cookies, server-side role guards |
 | LLM interface | Provider wrapper (`mock` default · OpenAI-compatible when configured) |
-| Tests | Vitest unit tests (42 tests) + executed 44-case safety benchmark suite |
+| Tests | Vitest unit tests (44 tests) + executed 44-case safety benchmark suite |
 
 ---
 
@@ -78,7 +87,7 @@ npm run dev                   # start dev server on http://localhost:3000
 
 ```bash
 npm run db:reset              # wipe test data & re-seed fresh mock data anytime
-npx vitest run                # 43 unit tests (pure logic, auth, booking isolation, billing, safety)
+npx vitest run                # 44 unit tests (pure logic, auth, booking isolation, billing, safety)
 npx tsx scripts/run-eval.ts   # 44-case safety & accuracy evaluation benchmark suite
 npm run typecheck             # TypeScript strict check (zero errors)
 ```

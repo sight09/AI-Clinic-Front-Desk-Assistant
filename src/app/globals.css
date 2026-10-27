@@ -19,6 +19,7 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 15.5px;
 }
 
 body {
@@ -26,6 +27,8 @@ body {
   background: var(--color-bone);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .font-display {

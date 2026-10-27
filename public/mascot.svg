@@ -164,13 +164,11 @@
       fill="#256c54"
     />
 
-    <!-- Beating Heart Emblem Badge on Chest -->
-    <g class="mascot-heart">
-      <circle cx="60" cy="73" r="7.5" fill="#ffffff" stroke="#e8f3ee" stroke-width="1.5" />
-      <path
-        d="M 60 76.5 C 57 74.5 55 72.8 55 71.2 C 55 69.8 56.2 68.8 57.5 68.8 C 58.4 68.8 59.3 69.3 60 70.1 C 60.7 69.3 61.6 68.8 62.5 68.8 C 63.8 68.8 65 69.8 65 71.2 C 65 72.8 63 74.5 60 76.5 Z"
-        fill="url(#heartGrad)"
-      />
+    <!-- Afiya Medical Cross Emblem Badge on Chest -->
+    <g class="mascot-cross">
+      <circle cx="60" cy="73" r="8" fill="#ffffff" stroke="#26a69a" stroke-width="1.5" />
+      <rect x="58.5" y="68.5" width="3" height="9" rx="1" fill="#005d52" />
+      <rect x="55.5" y="71.5" width="9" height="3" rx="1" fill="#005d52" />
     </g>
   </g>
 </svg>

@@ -58,16 +58,23 @@ const buckets = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60_000;
 const LIMIT = 20;
 
-export function checkRateLimit(key: string): void {
+// NOTE: In-process memory store; suitable for single-instance setups and local development.
+// In multi-instance or serverless production deployments, replace with distributed Redis / Upstash rate limiting.
+export function checkRateLimit(
+  key: string,
+  limit: number = LIMIT,
+  windowMs: number = WINDOW_MS,
+  message: string = "Too many requests. Please wait a moment and try again."
+): void {
   const now = Date.now();
   const bucket = buckets.get(key);
   if (!bucket || bucket.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+    buckets.set(key, { count: 1, resetAt: now + windowMs });
     return;
   }
   bucket.count += 1;
-  if (bucket.count > LIMIT) {
-    throw new AppError("rate_limited", "Too many messages. Please wait a moment and try again.");
+  if (bucket.count > limit) {
+    throw new AppError("rate_limited", message);
   }
 }
 

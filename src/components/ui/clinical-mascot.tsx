@@ -154,13 +154,11 @@ export function ClinicalMascot({ size = "lg", className = "", showBadge = true }
             />
           </g>
 
-          {/* Beating Heart Emblem Badge on Chest */}
-          <g className="animate-heartbeat" style={{ transformOrigin: "60px 73px" }}>
-            <circle cx="60" cy="73" r="7.5" fill="#ffffff" stroke="#e8f3ee" strokeWidth="1.5" />
-            <path
-              d="M 60 76.5 C 57 74.5 55 72.8 55 71.2 C 55 69.8 56.2 68.8 57.5 68.8 C 58.4 68.8 59.3 69.3 60 70.1 C 60.7 69.3 61.6 68.8 62.5 68.8 C 63.8 68.8 65 69.8 65 71.2 C 65 72.8 63 74.5 60 76.5 Z"
-              fill="url(#heartGrad)"
-            />
+          {/* Medical Cross Emblem Badge on Chest */}
+          <g style={{ transformOrigin: "60px 73px" }}>
+            <circle cx="60" cy="73" r="8" fill="#ffffff" stroke="#26a69a" strokeWidth="1.5" />
+            <rect x="58.5" y="68.5" width="3" height="9" rx="1" fill="#005d52" />
+            <rect x="55.5" y="71.5" width="9" height="3" rx="1" fill="#005d52" />
           </g>
         </svg>
       </div>
@@ -172,7 +170,7 @@ export function ClinicalMascot({ size = "lg", className = "", showBadge = true }
       {showBadge && (
         <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-[#cce0d2] shadow-2xs text-[11px] font-semibold text-[#11382b]">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Meridian Care AI · Clinic Help Desk</span>
+          <span>Afiya AI · Better Care Starts Here</span>
         </div>
       )}
     </div>

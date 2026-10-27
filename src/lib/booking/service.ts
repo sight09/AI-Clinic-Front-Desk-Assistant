@@ -801,11 +801,11 @@ export async function dispatchDueReminders(
       .set({ status: "sent", sentAt: new Date() })
       .where(and(eq(reminders.id, r.id), eq(reminders.status, "pending")));
 
-    // Automated patient notification:
+    // Patient appointment reminder notification:
     await db.insert(notifications).values({
       userId: r.patientId,
       title: "Upcoming Appointment Reminder",
-      message: `Automated Reminder: You have an appointment with Dr. ${r.providerName} scheduled for ${new Date(r.startAt).toLocaleString()}.`,
+      message: `Reminder: You have an upcoming consultation with Dr. ${r.providerName} scheduled for ${new Date(r.startAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}.`,
       type: "reminder",
     });
 
@@ -851,13 +851,15 @@ export async function listAppointmentsFor(userId: string, roleOrIsStaff: string 
     .innerJoin(users, eq(users.id, appointments.patientId))
     .orderBy(asc(slots.startAt));
 
-  let rows;
+  type AppointmentRow = Awaited<typeof base>[number];
+  let rows: AppointmentRow[];
   if (roleOrIsStaff === "clinician") {
     const clinicianProvId = await getClinicianProviderId(userId);
     if (clinicianProvId) {
       rows = await base.where(eq(slots.providerId, clinicianProvId));
     } else {
-      rows = await base;
+      // If a clinician account has no linked provider profile, return empty array to prevent leaking other clinicians' appointments
+      rows = [];
     }
   } else if (roleOrIsStaff === "receptionist" || roleOrIsStaff === "admin" || roleOrIsStaff === true) {
     rows = await base;

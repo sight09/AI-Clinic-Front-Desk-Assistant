@@ -75,6 +75,8 @@ export class OpenAICompatibleProvider implements LLMProvider {
           headers: {
             "content-type": "application/json",
             authorization: `Bearer ${this.cfg.apiKey}`,
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "Afiya Clinic",
           },
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(this.cfg.timeoutMs),

@@ -132,19 +132,23 @@ function LoginForm() {
           >
             ← Back to Front Desk
           </a>
-          <span className="rounded-full bg-[#11382b]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#11382b] uppercase tracking-wider">
-            Meridian Grove Portal
+          <span className="rounded-full bg-[#005d52]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#005d52] uppercase tracking-wider">
+            Afiya Portal
           </span>
         </div>
 
         <div className="mb-6 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] shadow-xs">
-            <HeartPulse className="h-7 w-7" />
-          </span>
-          <h1 className="font-display mt-4 text-3xl font-bold text-[#11382b]">
+          <div className="mx-auto flex justify-center mb-3">
+            <img
+              src="/afiya-logo.png"
+              alt="Afiya — Better Care Starts Here"
+              className="h-16 w-auto object-contain drop-shadow-xs"
+            />
+          </div>
+          <h1 className="font-display mt-2 text-2xl font-bold text-[#005d52]">
             {mode === "login" ? "Clinic System Sign In" : "New Patient Registration"}
           </h1>
-          <p className="mt-1.5 text-xs text-[#567364]">
+          <p className="mt-1 text-xs text-[#567364]">
             {mode === "login"
               ? "Sign in with your staff account (Doctor, Receptionist, Admin) or patient credentials."
               : "Create your personal clinical profile and online portal account."}

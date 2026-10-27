@@ -17,13 +17,17 @@ import {
   HeartPulse,
   LayoutDashboard,
   Loader2,
+  LogOut,
   Menu,
+  PanelLeft,
+  PanelLeftClose,
   Phone,
   Plus,
   Printer,
   RefreshCw,
   ShieldCheck,
   Stethoscope,
+  User,
   UserCheck,
   UserPlus,
   Users,
@@ -43,7 +47,7 @@ type ReceptionistTab = "schedule" | "cancellation_requests" | "automation" | "no
 const RECEPTIONIST_TABS = [
   { id: "schedule", label: "Front-Desk Check-In", icon: CalendarDays },
   { id: "cancellation_requests", label: "Cancellation Requests", icon: CalendarCheck },
-  { id: "automation", label: "Automated Workflows & Reminders", icon: BellRing },
+  { id: "automation", label: "Automated Reminders", icon: BellRing },
   { id: "notifications", label: "Notifications & Inquiries", icon: BellRing },
   { id: "book_patient", label: "Book for Patient", icon: CalendarPlus },
   { id: "providers", label: "Doctor Availability & Rooms", icon: Stethoscope },
@@ -58,7 +62,22 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
   const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.assign("/login");
+    }
+  }
+
   const [availableSlots, setAvailableSlots] = useState<{ slotId: string; startAt: string; providerName: string; departmentName: string }[]>([]);
 
   // Workflow Automation state
@@ -254,107 +273,172 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
   return (
     <div className="min-h-screen bg-[#f8faf7] text-[#162720] antialiased flex flex-col lg:flex-row">
       {/* ----------------- RECEPTIONIST SIDEBAR ----------------- */}
+      {/* ----------------- RECEPTIONIST SIDEBAR ----------------- */}
+      {/* ----------------- RECEPTIONIST SIDEBAR ----------------- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-[#0c241c] text-[#e3ece6] border-r border-[#16382b] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between ${
-          mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-40 transform bg-[#0c241c] text-[#e3ece6] border-r border-[#16382b] transition-all duration-300 ease-in-out lg:static flex flex-col justify-between shrink-0 overflow-hidden ${
+          sidebarOpen ? "w-64 xl:w-72" : "w-16 lg:w-[70px]"
+        } ${
+          mobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-4 flex flex-col flex-1 overflow-y-auto thin-scroll">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#d49b35] to-[#a5741e] text-[#11382b] shadow-xs font-bold">
-                <HeartPulse className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-sm font-bold text-white tracking-tight">Meridian Grove</p>
-                <p className="text-[9.5px] uppercase tracking-wider text-[#d49b35] font-semibold">Reception Desk</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/70"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* User Card */}
-          <div className="mt-3.5 rounded-xl border border-white/10 bg-white/5 p-3">
-            <div className="flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-400/20 text-blue-300 font-bold text-xs">
-                RD
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-white truncate">{user.name}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <p className="text-[10px] text-emerald-300 capitalize font-medium">Front Desk Active</p>
+        {sidebarOpen ? (
+          <div className="p-4 flex flex-col flex-1 overflow-y-auto thin-scroll">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <img src="/afiya-icon.png" alt="Afiya" className="h-8 w-8 object-contain rounded-lg" />
+                <div>
+                  <p className="font-display text-sm font-bold text-white tracking-tight">Afiya</p>
+                  <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Reception Desk</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="mt-4 space-y-1">
-            <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
-              Front-Desk Operations
-            </p>
-            {RECEPTIONIST_TABS.map((t) => {
-              const Icon = t.icon;
-              const active = tab === t.id;
-              const count = t.id === "cancellation_requests" ? pendingRequests.length : t.id === "notifications" ? notificationsList.length : 0;
-              return (
+              <div className="flex items-center gap-1">
                 <button
-                  key={t.id}
-                  onClick={() => {
-                    setTab(t.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
-                    active
-                      ? "bg-[#184838] text-white shadow-xs font-semibold"
-                      : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
-                  }`}
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  title="Collapse sidebar"
+                  className="hidden lg:flex p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
-                    <span>{t.label}</span>
-                  </div>
-                  {count > 0 && (
-                    <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[9.5px] font-bold text-white animate-pulse">
-                      {count}
-                    </span>
-                  )}
+                  <PanelLeftClose className="h-4 w-4" />
                 </button>
-              );
-            })}
-          </nav>
-
-          {/* Quick Actions */}
-          <div className="mt-5 pt-3.5 border-t border-white/10 space-y-2">
-            <p className="px-2 text-[10px] font-bold tracking-wider text-white/40 uppercase">Quick Actions</p>
-            <button
-              onClick={() => {
-                setTab("book_patient");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d49b35] to-[#c28b2a] px-3 py-2 text-xs font-bold text-[#11382b] hover:brightness-105 transition-all shadow-xs active:scale-98 cursor-pointer"
-            >
-              <CalendarPlus className="h-3.5 w-3.5" />
-              <span>Book Appointment</span>
-            </button>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-auto pt-4 text-xs text-white/50 border-t border-white/10 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold text-white/80">Meridian Grove Front Desk</p>
-              <p className="text-[9.5px] text-white/40">Reception Station · Active</p>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="lg:hidden p-1.5 rounded-full hover:bg-white/10 text-white/70"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+
+            {/* Navigation Links */}
+            <nav className="mt-4 space-y-1">
+              <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
+                Front-Desk Operations
+              </p>
+              {RECEPTIONIST_TABS.map((t) => {
+                const Icon = t.icon;
+                const active = tab === t.id;
+                const count = t.id === "cancellation_requests" ? pendingRequests.length : t.id === "notifications" ? notificationsList.length : 0;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTab(t.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                      active
+                        ? "bg-[#184838] text-white shadow-xs font-semibold"
+                        : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      <span>{t.label}</span>
+                    </div>
+                    {count > 0 && (
+                      <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white animate-pulse">
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+
+
+
+            {/* Profile & Status Capsule at the Bottom */}
+            <div className="mt-auto pt-4 border-t border-white/10 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(true)}
+                className="w-full text-left rounded-xl border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors cursor-pointer group"
+                title="View Front Desk Profile"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-400/20 text-blue-300 font-bold text-xs group-hover:scale-105 transition-transform">
+                    RD
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-white truncate">{user.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <p className="text-[10px] text-emerald-300 capitalize font-medium">Front Desk Specialist</p>
+                    </div>
+                  </div>
+                  <User className="h-3.5 w-3.5 text-white/40 group-hover:text-white transition-colors" />
+                </div>
+              </button>
+
+              <div className="pt-1 text-xs text-white/50 flex items-center justify-between px-1">
+                <div>
+                  <p className="text-[11px] font-semibold text-white/80">Afiya Front Desk</p>
+                  <p className="text-[10px] text-white/40">Reception Station · Active</p>
+                </div>
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center py-4 px-2 h-full justify-between">
+            <div className="flex flex-col items-center gap-4 w-full">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                title="Click to expand sidebar"
+                className="relative group h-10 w-10 rounded-xl hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer"
+              >
+                <img
+                  src="/afiya-icon.png"
+                  alt="Afiya"
+                  className="h-8 w-8 object-contain rounded-lg transition-all duration-200 group-hover:opacity-0 group-hover:scale-75"
+                />
+                <PanelLeft className="h-5 w-5 text-emerald-400 absolute opacity-0 scale-75 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100" />
+              </button>
+
+              <nav className="w-full space-y-1.5 mt-2">
+                {RECEPTIONIST_TABS.map((t) => {
+                  const Icon = t.icon;
+                  const active = tab === t.id;
+                  const count = t.id === "cancellation_requests" ? pendingRequests.length : t.id === "notifications" ? notificationsList.length : 0;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setTab(t.id)}
+                      title={t.label}
+                      className={`w-full relative flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer ${
+                        active
+                          ? "bg-[#184838] text-white shadow-xs"
+                          : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      {count > 0 && (
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+
+
+            </div>
+
+            <div className="w-full pt-3 border-t border-white/10 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(true)}
+                title={`Receptionist: ${user.name}`}
+                className="h-8 w-8 rounded-lg bg-blue-400/20 text-blue-300 hover:bg-blue-400/30 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
+              >
+                RD
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Main Canvas */}
@@ -363,7 +447,7 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-[#d6e2d4] bg-white text-[#11382b] hover:bg-[#edf5ec] shadow-2xs"
+              className="lg:hidden p-2 rounded-xl border border-[#d6e2d4] bg-white text-[#11382b] hover:bg-[#edf5ec] shadow-2xs cursor-pointer"
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -371,23 +455,8 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
               <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
                 {RECEPTIONIST_TABS.find((t) => t.id === tab)?.label}
               </h2>
-              <p className="text-[10.5px] text-[#567364] mt-0.5">Front-Desk Patient Arrivals &amp; Appointment Scheduling</p>
+              <p className="text-[11px] text-[#567364] mt-0.5">Front-Desk Patient Arrivals &amp; Appointment Scheduling</p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <button
-              type="button"
-              onClick={() => setShowRoleModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
-            >
-              <RefreshCw className="h-3 w-3 text-[#d49b35]" />
-              <span>Switch Role</span>
-            </button>
-            <SignOutButton
-              redirectTo="/login"
-              className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
-            />
           </div>
         </header>
 
@@ -529,41 +598,41 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
             </div>
           )}
 
-          {/* TAB: WORKFLOW AUTOMATION & REMINDERS */}
+          {/* TAB: AUTOMATED REMINDERS & PATIENT NOTIFICATIONS */}
           {tab === "automation" && (
             <div className="space-y-6 max-w-6xl">
               <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Clinic Workflow Automation &amp; Reminders</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Autonomous reminder dispatch, cancellation-aware waitlist routing, and scheduling conflict prevention.
+                <h2 className="text-2xl font-bold text-[#11382b] tracking-tight">Patient Reminders &amp; Automated Outreach</h2>
+                <p className="text-xs text-[#567364] mt-1 font-medium">
+                  Automated appointment reminders, pre-visit notifications, and real-time scheduling integrity.
                 </p>
               </div>
 
               {/* Automation KPIs */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Automated Reminders</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#567364]">Reminders Sent</p>
                   <p className="mt-2 text-2xl font-bold text-[#d49b35]">
                     {notificationsList.filter((n) => n.type === "reminder").length}
                   </p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Dispatched to patient feeds</p>
+                  <p className="text-[11px] text-[#7f998b] mt-1 font-medium">Delivered to patient portal</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Confirmed Bookings</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#567364]">Upcoming Visits</p>
                   <p className="mt-2 text-2xl font-bold text-emerald-700">
                     {appointments.filter((a) => a.status === "confirmed").length}
                   </p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">24h reminders scheduled</p>
+                  <p className="text-[11px] text-[#7f998b] mt-1 font-medium">Active in next 48 hours</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Cancellation Requests</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#567364]">Cancellation Requests</p>
                   <p className="mt-2 text-2xl font-bold text-amber-700">{pendingRequests.length}</p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Routed to reception queue</p>
+                  <p className="text-[11px] text-[#7f998b] mt-1 font-medium">Awaiting receptionist review</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Conflicts Prevented</p>
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-[#567364]">Schedule Integrity</p>
                   <p className="mt-2 text-2xl font-bold text-blue-700">100%</p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Atomic DB FOR UPDATE locks</p>
+                  <p className="text-[11px] text-[#7f998b] mt-1 font-medium">Verified · Zero booking conflicts</p>
                 </div>
               </div>
 
@@ -571,12 +640,12 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
               <div className="rounded-2xl border border-[#dce6db] bg-white p-6 space-y-4 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h3 className="font-display text-base font-bold text-[#11382b] flex items-center gap-2">
+                    <h3 className="text-base font-bold text-[#11382b] flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-[#d49b35]" />
-                      <span>Automated 24h &amp; 48h Patient Reminder Engine</span>
+                      <span>24h &amp; 48h Appointment Reminder Dispatcher</span>
                     </h3>
-                    <p className="text-xs text-[#567364] mt-1 max-w-2xl">
-                      Evaluates all confirmed visits scheduled in the next 48 hours and writes personalized appointment reminders directly to patient notification feeds. Duplicate runs are safely skipped.
+                    <p className="text-xs text-[#567364] mt-1 max-w-2xl leading-relaxed">
+                      Automatically evaluates confirmed patient visits scheduled for the next 48 hours and delivers personalized pre-visit reminders. Built-in deduplication prevents redundant messages.
                     </p>
                   </div>
                   <button
@@ -585,7 +654,7 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
                     className="inline-flex items-center gap-2 rounded-full bg-[#11382b] px-4 py-2 text-xs font-bold text-white hover:bg-[#184838] disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
                   >
                     {dispatchBusy ? <Loader2 className="h-4 w-4 animate-spin text-[#d49b35]" /> : <RefreshCw className="h-4 w-4 text-[#d49b35]" />}
-                    <span>{dispatchBusy ? "Executing Dispatch Engine…" : "Run Automated Reminder Dispatch"}</span>
+                    <span>{dispatchBusy ? "Dispatching Reminders…" : "Send Due Reminders"}</span>
                   </button>
                 </div>
 
@@ -594,8 +663,8 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       <span>
-                        Automated dispatch completed: <strong>{dispatchStatus.sent}</strong> sent to patient inbox,{" "}
-                        <strong>{dispatchStatus.skipped}</strong> skipped, <strong>{dispatchStatus.failed}</strong> failed.
+                        Reminder dispatch completed: <strong>{dispatchStatus.sent}</strong> delivered,{" "}
+                        <strong>{dispatchStatus.skipped}</strong> up to date, <strong>{dispatchStatus.failed}</strong> failed.
                       </span>
                     </div>
                   </div>
@@ -604,9 +673,9 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
 
               {/* Live Automated Notification Stream */}
               <div className="rounded-2xl border border-[#dce6db] bg-white p-6 space-y-3 shadow-2xs">
-                <h3 className="font-display text-base font-bold text-[#11382b]">Recent Automated Dispatch &amp; Routing Events</h3>
+                <h3 className="text-base font-bold text-[#11382b]">Recent Reminder &amp; Notification Activity</h3>
                 {notificationsList.length === 0 ? (
-                  <p className="text-xs text-[#7f998b] py-3">No automated notifications recorded yet.</p>
+                  <p className="text-xs text-[#7f998b] py-3">No recent notifications recorded.</p>
                 ) : (
                   <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
                     {notificationsList.slice(0, 8).map((n) => (
@@ -621,7 +690,11 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
                                 : "bg-blue-100 text-blue-800"
                             }`}
                           >
-                            {n.type.replace("_", " ")}
+                            {n.type === "reminder"
+                              ? "Appointment Reminder"
+                              : n.type === "booking_confirmed"
+                              ? "Booking Confirmed"
+                              : n.type.replace("_", " ")}
                           </span>
                           <span className="text-[#7f998b]">{fmt(n.createdAt)}</span>
                         </div>
@@ -991,6 +1064,107 @@ export function ReceptionistDashboard({ user }: { user: { name: string; role: st
         onClose={() => setShowRoleModal(false)}
         currentEmail="receptionist@demo.clinic"
       />
+
+      {/* ----------------- USER PROFILE MODAL ----------------- */}
+      {showUserProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-blue-100">
+            <button
+              onClick={() => setShowUserProfileModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex flex-col items-center text-center">
+              <div className="h-16 w-16 rounded-2xl bg-[#0c241c] text-blue-400 font-display font-bold text-2xl flex items-center justify-center shadow-md border border-[#16382b]">
+                RD
+              </div>
+              <h3 className="mt-3.5 text-base font-bold text-[#11382b]">{user.name}</h3>
+              <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Staff · Front Desk Receptionist
+              </span>
+              <p className="mt-1 text-xs text-[#567364]">receptionist@demo.clinic</p>
+            </div>
+
+            <div className="mt-5 space-y-2 border-t border-[#edf3ec] pt-4 text-xs">
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Staff ID</span>
+                <span className="font-semibold text-[#11382b]">REC-1042-DESK</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Department</span>
+                <span className="font-semibold text-[#11382b]">Patient Relations &amp; Admissions</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Clinic Center</span>
+                <span className="font-semibold text-[#11382b]">Afiya Health Hub</span>
+              </div>
+              <div className="flex justify-between py-1 text-stone-600">
+                <span className="text-stone-400">Session Status</span>
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Authenticated Active
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUserProfileModal(false);
+                  setShowSignOutConfirm(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sign Out of Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUserProfileModal(false)}
+                className="w-full rounded-xl border border-stone-200 px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- SIGN OUT CONFIRMATION MODAL ----------------- */}
+      {showSignOutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-stone-200 text-center">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-600 mb-3.5">
+              <LogOut className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-bold text-stone-900">Are you sure you want to sign out?</h3>
+            <p className="mt-1.5 text-xs text-stone-500 leading-relaxed">
+              You will be safely logged out of your front desk reception session.
+            </p>
+            <div className="mt-6 flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowSignOutConfirm(false)}
+                disabled={isSigningOut}
+                className="flex-1 rounded-xl border border-stone-200 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                disabled={isSigningOut}
+                className="flex-1 rounded-xl bg-rose-600 py-2.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                {isSigningOut ? "Signing Out…" : "Yes, Sign Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

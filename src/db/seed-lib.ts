@@ -65,7 +65,8 @@ export async function runSeed(): Promise<SeedSummary> {
   await db.delete(redFlagRules);
 
   const info: { key: string; value: string; approval: "approved" | "pending_owner_approval" }[] = [
-    { key: "clinic_name", value: "Meridian Grove Clinic (synthetic demo)", approval: "approved" },
+    { key: "clinic_name", value: "Afiya Clinic", approval: "approved" },
+    { key: "clinic_tagline", value: "Better Care Starts Here.", approval: "approved" },
     { key: "hours", value: "Monday–Friday 8:00–18:00, Saturday 9:00–13:00", approval: "approved" },
     { key: "phone", value: "+1 (555) 010-4477 (fictional 555 demo number)", approval: "approved" },
     { key: "address", value: "480 Alder Row, Suite 12 (fictional demo address)", approval: "approved" },
@@ -84,7 +85,7 @@ export async function runSeed(): Promise<SeedSummary> {
     {
       question: "What are your opening hours?",
       answer:
-        "Meridian Grove Clinic is open Monday to Friday from 8:00 to 18:00, and Saturday from 9:00 to 13:00. We are closed on Sundays and public holidays.",
+        "Afiya Clinic is open Monday to Friday from 8:00 to 18:00, and Saturday from 9:00 to 13:00. We are closed on Sundays and public holidays.",
       category: "hours",
       keywords: ["hours", "open", "opening times", "closing", "saturday", "sunday"],
     },
