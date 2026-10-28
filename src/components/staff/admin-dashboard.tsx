@@ -323,8 +323,8 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
               <div className="flex items-center gap-2.5">
                 <img src="/afiya-icon.png" alt="Afiya" className="h-8 w-8 object-contain rounded-lg" />
                 <div>
-                  <p className="font-display text-sm font-bold text-white tracking-tight">Afiya</p>
-                  <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Executive Admin</p>
+                  <p className="font-display text-[18px] font-medium text-white tracking-tight leading-none">Afiya</p>
+                  <p className="font-sans text-[12px] font-normal tracking-normal text-emerald-300 mt-0.5">Executive Admin</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -348,7 +348,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
 
             {/* Navigation Links */}
             <nav className="mt-4 space-y-1">
-              <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
+              <p className="px-2 pb-1.5 text-[13px] font-normal text-white/60 normal-case">
                 Administration
               </p>
               {ADMIN_TABS.map((t) => {
@@ -362,14 +362,14 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
                       setTab(t.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                       active
-                        ? "bg-[#184838] text-white shadow-xs font-semibold"
-                        : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                        ? "font-medium text-white bg-white/10 border-l-[3px] border-[#3fb484] shadow-xs"
+                        : "font-normal text-[#9cb5a5] hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      <Icon className={`h-[19px] w-[19px] shrink-0 ${active ? "text-[#3fb484]" : "text-[#7f9e8a]"}`} />
                       <span>{t.label}</span>
                     </div>
                     {count > 0 && (
@@ -526,10 +526,10 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
               <Menu className="h-4 w-4" />
             </button>
             <div>
-              <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
+              <h2 className="font-sans text-[24px] font-semibold text-[#122621] capitalize leading-none">
                 {ADMIN_TABS.find((t) => t.id === tab)?.label}
               </h2>
-              <p className="text-[11px] text-[#567364] mt-0.5">Clinic Administration &amp; Operational Governance</p>
+              <p className="text-[13px] text-[#527065] mt-1 font-normal">Clinic Administration &amp; Operational Governance</p>
             </div>
           </div>
         </header>
@@ -539,46 +539,39 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 1: OPERATIONS */}
           {tab === "operations" && (
             <div className="space-y-8 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Clinic Operational Intelligence</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Clinic-wide performance, slot utilization, revenue metrics, and recent security logs.
-                </p>
-              </div>
-
               {/* KPI Cards */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Confirmed Bookings</p>
-                  <p className="mt-2 text-2xl font-bold text-[#d49b35]">{overview?.stats.confirmedAppointments ?? 0}</p>
+                <div className="rounded-2xl border border-[#d9e6e0] bg-white p-5 shadow-2xs">
+                  <p className="text-[13px] font-normal text-[#527065] normal-case">Confirmed Bookings</p>
+                  <p className="mt-2 text-[30px] font-bold text-[#0e615c] leading-tight">{overview?.stats.confirmedAppointments ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Total Revenue</p>
-                  <p className="mt-2 text-2xl font-bold text-emerald-700">
+                <div className="rounded-2xl border border-[#d9e6e0] bg-white p-5 shadow-2xs">
+                  <p className="text-[13px] font-normal text-[#527065] normal-case">Total Revenue</p>
+                  <p className="mt-2 text-[30px] font-bold text-[#0e615c] leading-tight">
                     ${overview?.stats.totalRevenue?.toLocaleString() ?? 0}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Slot Utilization</p>
-                  <p className="mt-2 text-2xl font-bold text-[#d49b35]">{overview?.stats.slotUtilizationRate ?? 0}%</p>
+                <div className="rounded-2xl border border-[#d9e6e0] bg-white p-5 shadow-2xs">
+                  <p className="text-[13px] font-normal text-[#527065] normal-case">Slot Utilization</p>
+                  <p className="mt-2 text-[30px] font-bold text-[#3fb484] leading-tight">{overview?.stats.slotUtilizationRate ?? 0}%</p>
                 </div>
-                <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">Registered Users</p>
-                  <p className="mt-2 text-2xl font-bold text-[#11382b]">{usersList.length}</p>
+                <div className="rounded-2xl border border-[#d9e6e0] bg-white p-5 shadow-2xs">
+                  <p className="text-[13px] font-normal text-[#527065] normal-case">Registered Users</p>
+                  <p className="mt-2 text-[30px] font-bold text-[#122621] leading-tight">{usersList.length}</p>
                 </div>
               </div>
 
               {/* Audit Log */}
-              <div className="rounded-2xl border border-[#dce6db] bg-white p-6 space-y-3 shadow-2xs">
-                <h3 className="font-display text-base font-bold text-[#11382b]">Recent Administrative &amp; Security Audit Trail</h3>
+              <div className="rounded-2xl border border-[#d9e6e0] bg-white p-6 space-y-3 shadow-2xs">
+                <h3 className="font-sans text-[16px] font-semibold text-[#122621]">Recent Administrative &amp; Security Audit Trail</h3>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 text-xs">
                   {(overview?.recentAudit ?? []).slice(0, 9).map((al) => (
                     <div key={al.id} className="rounded-xl border border-[#dce6db] bg-[#f8faf6] p-3">
-                      <div className="flex items-center justify-between text-[10px] text-[#7f998b] mb-1">
+                      <div className="flex items-center justify-between text-xs text-[#7f998b] mb-1">
                         <span className="font-mono text-[#d49b35] font-bold uppercase">{al.action}</span>
                         <span>{fmt(al.createdAt)}</span>
                       </div>
-                      <p className="text-[#374e41] text-[11px]">
+                      <p className="text-[#374e41] text-xs">
                         Actor: {al.actorRole} · Entity: {al.entityType || "system"}
                       </p>
                     </div>
@@ -591,13 +584,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 2: USER & STAFF MANAGEMENT */}
           {tab === "users" && (
             <div className="space-y-6 max-w-6xl">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-[#11382b]">Staff Accounts &amp; User Roles</h2>
-                  <p className="text-xs text-[#567364] mt-0.5">
-                    Manage doctor, receptionist, and administrator accounts. Assign appropriate roles and access permissions.
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-4">
                 <button
                   onClick={() => {
                     setCreatedUserSuccess(null);
@@ -691,13 +678,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 3: MASTER SCHEDULE */}
           {tab === "schedule" && (
             <div className="space-y-6 max-w-6xl">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-[#11382b]">Master Clinic Schedule</h2>
-                  <p className="text-xs text-[#567364] mt-0.5">
-                    Complete administrative oversight of all clinic appointments. Intervene, resolve conflicts, and handle exceptional cancellations.
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-4">
                 <button
                   onClick={() => setShowSlotModal(true)}
                   className="inline-flex items-center gap-2 rounded-full bg-[#11382b] px-4 py-2 text-xs font-bold text-white hover:bg-[#184838] shadow-xs cursor-pointer"
@@ -708,7 +689,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
 
               <div className="overflow-hidden rounded-2xl border border-[#dce6db] bg-white shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f4f7f3] text-[10.5px] tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
+                  <thead className="bg-[#f4f7f3] text-xs tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
                     <tr>
                       <th className="px-5 py-3">Time</th>
                       <th className="px-5 py-3">Patient</th>
@@ -724,13 +705,13 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
                         <td className="px-5 py-3.5 font-medium text-[#11382b]">{fmt(a.startAt)}</td>
                         <td className="px-5 py-3.5">
                           <p className="font-semibold text-[#11382b]">{a.patientName}</p>
-                          <p className="text-[10px] text-[#7f998b]">{a.patientEmail}</p>
+                          <p className="text-xs text-[#7f998b]">{a.patientEmail}</p>
                         </td>
                         <td className="px-5 py-3.5 text-[#243a2f] font-medium">{a.providerName}</td>
                         <td className="px-5 py-3.5 text-[#567364]">{a.departmentName}</td>
                         <td className="px-5 py-3.5">
                           <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase border ${
                               a.status === "confirmed"
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                                 : a.status === "checked_in"
@@ -754,7 +735,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
                                 setCancellingAppt(a);
                                 setDirectCancelReason("");
                               }}
-                              className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer"
+                              className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer"
                             >
                               Admin Cancel
                             </button>
@@ -771,12 +752,6 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 4: CANCELLATION REQUESTS QUEUE */}
           {tab === "cancellation_requests" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Cancellation &amp; Reschedule Requests Inbox</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Review requests submitted by doctors or patients with recorded reasons. Approve or reject requests and maintain scheduling integrity.
-                </p>
-              </div>
 
               {pendingRequests.length === 0 ? (
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-12 text-center shadow-2xs">
@@ -827,16 +802,9 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 5: CLINICAL RECORDS OVERSIGHT */}
           {tab === "records" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Clinical EHR Oversight</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Administrative oversight of clinical documentation and visit history. Every access is recorded in the immutable audit log.
-                </p>
-              </div>
-
               <div className="overflow-hidden rounded-2xl border border-[#dce6db] bg-white shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f4f7f3] text-[10.5px] tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
+                  <thead className="bg-[#f4f7f3] text-xs tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
                     <tr>
                       <th className="px-5 py-3">Date</th>
                       <th className="px-5 py-3">Patient</th>
@@ -864,14 +832,9 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 6: BILLING & LEDGER */}
           {tab === "billing" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Clinic Financial Ledger</h2>
-                <p className="text-xs text-[#567364] mt-0.5">Review clinical consultation invoices, payment methods, and receipts.</p>
-              </div>
-
               <div className="overflow-hidden rounded-2xl border border-[#dce6db] bg-white shadow-2xs">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f4f7f3] text-[10.5px] tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
+                  <thead className="bg-[#f4f7f3] text-xs tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
                     <tr>
                       <th className="px-5 py-3">Invoice #</th>
                       <th className="px-5 py-3">Patient</th>
@@ -889,7 +852,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
                         <td className="px-5 py-3 font-bold text-[#11382b]">${inv.totalAmount}</td>
                         <td className="px-5 py-3">
                           <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase border ${
                               inv.status === "paid" ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-amber-100 text-amber-800 border-amber-200"
                             }`}
                           >
@@ -909,24 +872,17 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 7: SAFETY POLICY */}
           {tab === "safety" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Clinic Safety Policy Rules</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Deterministic red flag rules loaded by the AI assistant pipeline before processing messages.
-                </p>
-              </div>
-
               <div className="grid gap-3 sm:grid-cols-2">
                 {(overview?.rules ?? []).map((rule) => (
                   <div key={rule.id} className="rounded-2xl border border-[#dce6db] bg-white p-4 space-y-2 shadow-2xs">
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-xs font-bold text-rose-700">&quot;{rule.phrase}&quot;</span>
-                      <span className="rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] text-rose-800 font-semibold uppercase">
+                      <span className="rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-xs text-rose-800 font-semibold uppercase">
                         {rule.category}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#567364]">Severity: {rule.severity}</p>
-                    <span className="inline-block rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 px-2.5 py-0.5 text-[9.5px] font-bold uppercase">
+                    <p className="text-xs text-[#567364]">Severity: {rule.severity}</p>
+                    <span className="inline-block rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 px-2.5 py-0.5 text-xs font-bold uppercase">
                       Active Guardrail
                     </span>
                   </div>
@@ -938,14 +894,8 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB: SYSTEM NOTIFICATIONS */}
           {tab === "notifications" && (
             <div className="space-y-6 max-w-6xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-[#11382b]">System &amp; Operational Notifications</h2>
-                  <p className="text-xs text-[#567364] mt-0.5">
-                    Live system notifications: appointment confirmations, staff actions, and operational activity.
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+              <div className="flex items-center justify-end">
+                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3.5 py-1 text-xs font-bold text-emerald-800">
                   {notificationsList.length} Total Alerts
                 </span>
               </div>
@@ -984,13 +934,7 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
           {/* TAB 8: EVAL SUITE & AI AUTOMATION METRICS */}
           {tab === "eval" && (
             <div className="space-y-6 max-w-6xl">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-[#11382b]">AI &amp; Automation Performance Evaluation</h2>
-                  <p className="text-xs text-[#567364] mt-0.5">
-                    Comprehensive operational scorecard and reproducible 44-case hermetic benchmark matrix measuring AI accuracy, safety guardrails, and automated workflow reliability.
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-4">
                 <button
                   onClick={runEval}
                   disabled={evalBusy}
@@ -1004,35 +948,35 @@ export function AdminDashboard({ user }: { user: { name: string; role: string } 
               {/* 5 Core Evaluation Metrics */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">1. Booking Success Rate</p>
+                  <p className="text-xs uppercase font-bold text-[#567364]">1. Booking Success Rate</p>
                   <p className="mt-2 text-2xl font-bold text-emerald-700">99.4%</p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">ACID transactional locks</p>
+                  <p className="text-xs text-[#7f998b] mt-1">ACID transactional locks</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">2. AI Response Accuracy</p>
+                  <p className="text-xs uppercase font-bold text-[#567364]">2. AI Response Accuracy</p>
                   <p className="mt-2 text-2xl font-bold text-[#d49b35]">
                     {evalResult ? `${evalResult.passRate}%` : "100%"}
                   </p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Intent routing &amp; tool dispatch</p>
+                  <p className="text-xs text-[#7f998b] mt-1">Intent routing &amp; tool dispatch</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">3. Safety Escalation</p>
+                  <p className="text-xs uppercase font-bold text-[#567364]">3. Safety Escalation</p>
                   <p className="mt-2 text-2xl font-bold text-emerald-700">100%</p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">0 false negatives on red flags</p>
+                  <p className="text-xs text-[#7f998b] mt-1">0 false negatives on red flags</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">4. Conflicts Prevented</p>
+                  <p className="text-xs uppercase font-bold text-[#567364]">4. Conflicts Prevented</p>
                   <p className="mt-2 text-2xl font-bold text-blue-700">
                     {(overview?.stats?.confirmedAppointments ?? 8) * 2 + 6}
                   </p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Race conditions rejected</p>
+                  <p className="text-xs text-[#7f998b] mt-1">Race conditions rejected</p>
                 </div>
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-4 shadow-2xs">
-                  <p className="text-[10px] uppercase font-bold text-[#567364]">5. Front-Desk Time Saved</p>
+                  <p className="text-xs uppercase font-bold text-[#567364]">5. Front-Desk Time Saved</p>
                   <p className="mt-2 text-2xl font-bold text-amber-700">
                     ~{Math.round(((overview?.stats?.confirmedAppointments ?? 6) + 12) * 12.5)}m
                   </p>
-                  <p className="text-[10.5px] text-[#7f998b] mt-1">Intake, reminders &amp; booking</p>
+                  <p className="text-xs text-[#7f998b] mt-1">Intake, reminders &amp; booking</p>
                 </div>
               </div>
 

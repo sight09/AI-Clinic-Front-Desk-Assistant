@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getCurrentUser, requireRole, requireUser } from "@/lib/auth/service";
+import { getCurrentUser, hashPassword, requireRole, requireUser } from "@/lib/auth/service";
 import { bookAppointment, listAppointmentsFor } from "@/lib/booking/service";
 import { AppError, toSafeErrorPayload } from "@/lib/errors";
 
@@ -19,10 +19,16 @@ export async function GET() {
 const BookSchema = z
   .object({
     slotId: z.string().uuid("Invalid slot ID"),
-    reason: z.string().max(300).optional().default(""),
+    reason: z.string().max(800).optional().default(""),
     idempotencyKey: z.string().min(1).max(120).optional(),
     patientId: z.string().uuid().optional(),
     patientEmail: z.string().email().optional(),
+    patientName: z.string().optional(),
+    phone: z.string().optional(),
+    appointmentType: z.string().optional(),
+    priority: z.string().optional(),
+    insuranceProvider: z.string().optional(),
+    notes: z.string().optional(),
   })
   .passthrough();
 
@@ -78,6 +84,31 @@ export async function POST(req: Request) {
           .limit(1);
         if (found[0]) {
           targetPatientId = found[0].id;
+        } else {
+          // Auto-create patient user account for walk-in or new phone intakes
+          const newName = parsed.data.patientName?.trim() || parsed.data.patientEmail.split("@")[0];
+          const [created] = await db
+            .insert(users)
+            .values({
+              email: parsed.data.patientEmail.toLowerCase(),
+              name: newName,
+              role: "patient",
+              passwordHash: hashPassword("patient1234"),
+              isSynthetic: true,
+            })
+            .returning({ id: users.id });
+          if (created) {
+            targetPatientId = created.id;
+            const { patientProfiles } = await import("@/db/schema");
+            await db
+              .insert(patientProfiles)
+              .values({
+                userId: created.id,
+                phone: parsed.data.phone || "",
+                insuranceProvider: parsed.data.insuranceProvider || "Self-Pay",
+              })
+              .onConflictDoNothing();
+          }
         }
       }
     }
@@ -123,7 +154,7 @@ export async function POST(req: Request) {
 
       // 1. Notification for the Patient
       await db.insert(notifications).values({
-        userId: user.id,
+        userId: targetPatientId,
         title: "Appointment Confirmed",
         message: `Your appointment with ${docName} (${deptName}) on ${startStr} has been confirmed.`,
         type: "appointment",

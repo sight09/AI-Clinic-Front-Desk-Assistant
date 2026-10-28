@@ -1,5 +1,9 @@
 <div align="center">
-  <img src="public/afiya-logo.png" alt="Afiya — Better Care Starts Here" width="320" />
+  <p align="center">
+    <img src="public/afiya-logo.png" alt="Afiya — Better Care Starts Here" width="310" style="vertical-align: middle; display: inline-block;" />
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="public/mascot.svg" alt="Afiya Clinical Mascot" width="115" style="vertical-align: middle; display: inline-block;" />
+  </p>
 
   <h1>Afiya — Better Care Starts Here</h1>
 

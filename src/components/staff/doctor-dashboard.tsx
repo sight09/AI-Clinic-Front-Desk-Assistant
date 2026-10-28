@@ -269,8 +269,8 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
               <div className="flex items-center gap-2.5">
                 <img src="/afiya-icon.png" alt="Afiya" className="h-8 w-8 object-contain rounded-lg" />
                 <div>
-                  <p className="font-display text-sm font-bold text-white tracking-tight">Afiya</p>
-                  <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Clinician Station</p>
+                  <p className="font-display text-[18px] font-medium text-white tracking-tight leading-none">Afiya</p>
+                  <p className="font-sans text-[12px] font-normal tracking-normal text-emerald-300 mt-0.5">Clinician Station</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -294,8 +294,8 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
 
             {/* Navigation Links */}
             <nav className="mt-4 space-y-1">
-              <p className="px-2 pb-1.5 text-[10px] font-bold tracking-wider text-white/40 uppercase">
-                Clinical Workspace
+              <p className="px-2 pb-1.5 text-[13px] font-normal text-white/60 normal-case">
+                Clinical workspace
               </p>
               {DOCTOR_TABS.map((t) => {
                 const Icon = t.icon;
@@ -308,18 +308,18 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
                       setTab(t.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                       active
-                        ? "bg-[#184838] text-white shadow-xs font-semibold"
-                        : "text-[#9cb5a5] hover:bg-white/5 hover:text-white"
+                        ? "font-medium text-white bg-white/10 border-l-[3px] border-[#3fb484] shadow-xs"
+                        : "font-normal text-[#9cb5a5] hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={`h-4 w-4 ${active ? "text-[#d49b35]" : "text-[#7f9e8a]"}`} />
+                      <Icon className={`h-[19px] w-[19px] shrink-0 ${active ? "text-[#3fb484]" : "text-[#7f9e8a]"}`} />
                       <span>{t.label}</span>
                     </div>
                     {count > 0 && (
-                      <span className="rounded-full bg-[#d49b35] px-2 py-0.5 text-[10px] font-bold text-[#11382b]">
+                      <span className="rounded-full bg-[#3fb484] px-2 py-0.5 text-[11px] font-bold text-[#07241a]">
                         {count}
                       </span>
                     )}
@@ -454,10 +454,10 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
               <Menu className="h-4 w-4" />
             </button>
             <div>
-              <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
+              <h2 className="font-sans text-[24px] font-semibold text-[#122621] capitalize leading-none">
                 {DOCTOR_TABS.find((t) => t.id === tab)?.label}
               </h2>
-              <p className="text-[11px] text-[#567364] mt-0.5">Physician Clinical Operations &amp; EHR Consultation</p>
+              <p className="text-[13px] text-[#527065] mt-1 font-normal">Physician Clinical Operations &amp; EHR Consultation</p>
             </div>
           </div>
         </header>
@@ -467,22 +467,16 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           {/* TAB 1: DOCTOR SCHEDULE */}
           {tab === "schedule" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">My Clinical Schedule &amp; Consultations</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Appointments assigned to your clinical care. Start consultations, document patient examinations, or request a reschedule.
-                </p>
-              </div>
 
-              <div className="overflow-hidden rounded-2xl border border-[#dce6db] bg-white shadow-2xs">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f4f7f3] text-[10.5px] tracking-wider text-[#436252] uppercase font-bold border-b border-[#e5ede3]">
+              <div className="overflow-hidden rounded-2xl border border-[#d9e6e0] bg-white shadow-2xs">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-[#f3f8f5] text-[12px] text-[#527065] font-medium normal-case border-b border-[#e5ede3]">
                     <tr>
-                      <th className="px-5 py-3">Time</th>
-                      <th className="px-5 py-3">Patient</th>
-                      <th className="px-5 py-3">Chief Reason</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3 text-right">Clinical Actions</th>
+                      <th className="px-5 py-3 font-medium">Time</th>
+                      <th className="px-5 py-3 font-medium">Patient</th>
+                      <th className="px-5 py-3 font-medium">Chief Reason</th>
+                      <th className="px-5 py-3 font-medium">Status</th>
+                      <th className="px-5 py-3 text-right font-medium">Clinical Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#edf3ec]">
@@ -581,12 +575,6 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           {/* TAB 2: PATIENT EHR & CHARTS */}
           {tab === "records" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Patient Clinical Records &amp; Medical Charts</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Clinical documentation, physical examination notes, human-rendered diagnoses, and prescriptions for your patients.
-                </p>
-              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 {records.map((r) => (
@@ -629,12 +617,6 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           {/* TAB 3: AI REVIEW QUEUE */}
           {tab === "review" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">AI Intake Review Queue</h2>
-                <p className="text-xs text-[#567364] mt-0.5">
-                  Review and sign off on structured patient symptom extractions produced by the front-desk AI assistant.
-                </p>
-              </div>
 
               {drafts.length === 0 ? (
                 <div className="rounded-2xl border border-[#dce6db] bg-white p-12 text-center shadow-2xs">
@@ -675,14 +657,8 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           {/* TAB 4: NOTIFICATIONS & ALERTS */}
           {tab === "notifications" && (
             <div className="space-y-6 max-w-6xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-[#11382b]">Doctor Notifications &amp; Alerts</h2>
-                  <p className="text-xs text-[#567364] mt-0.5">
-                    Real-time notifications: new bookings, appointment confirmations, and patient schedule changes.
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+              <div className="flex items-center justify-end">
+                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-3.5 py-1 text-xs font-bold text-emerald-800">
                   {notificationsList.length} Total Alerts
                 </span>
               </div>
@@ -721,10 +697,6 @@ export function DoctorDashboard({ user }: { user: { name: string; role: string; 
           {/* TAB 5: CLINICAL PROFILE */}
           {tab === "profile" && (
             <div className="space-y-6 max-w-6xl">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-[#11382b]">Professional Clinical Profile</h2>
-                <p className="text-xs text-[#567364] mt-0.5">Your practice profile, assigned consultation suite, and clinic hours.</p>
-              </div>
 
               {(() => {
                 const myProvider =

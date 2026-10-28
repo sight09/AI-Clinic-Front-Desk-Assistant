@@ -52,21 +52,21 @@ export async function GET(req: Request) {
 
 const UpdateProfileSchema = z
   .object({
-    name: z.string().min(2).max(200).optional(),
-    phone: z.string().max(50).optional(),
-    dateOfBirth: z.string().max(50).optional(),
-    gender: z.string().max(50).optional(),
-    address: z.string().max(300).optional(),
-    bloodGroup: z.string().max(20).optional(),
-    allergies: z.string().max(300).optional(),
-    emergencyContactName: z.string().max(200).optional(),
-    emergencyContactPhone: z.string().max(50).optional(),
-    insuranceProvider: z.string().max(200).optional(),
-    insurancePolicyNumber: z.string().max(100).optional(),
-    medicalHistory: z.string().max(2000).optional(),
-    patientId: z.string().uuid().optional(),
+    name: z.string().min(1).max(200).optional().nullable(),
+    phone: z.string().max(50).optional().nullable(),
+    dateOfBirth: z.string().max(50).optional().nullable(),
+    gender: z.string().max(50).optional().nullable(),
+    address: z.string().max(300).optional().nullable(),
+    bloodGroup: z.string().max(20).optional().nullable(),
+    allergies: z.string().max(300).optional().nullable(),
+    emergencyContactName: z.string().max(200).optional().nullable(),
+    emergencyContactPhone: z.string().max(50).optional().nullable(),
+    insuranceProvider: z.string().max(200).optional().nullable(),
+    insurancePolicyNumber: z.string().max(100).optional().nullable(),
+    medicalHistory: z.string().max(2000).optional().nullable(),
+    patientId: z.string().uuid().optional().nullable(),
   })
-  .strict();
+  .passthrough();
 
 export async function POST(req: Request) {
   try {

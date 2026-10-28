@@ -19,14 +19,14 @@ export function StaffDashboard({ user }: { user: { name: string; role: string; e
 
   return (
     <div className="grid min-h-screen place-items-center bg-[#f8faf7] text-[#162720] p-6 text-center">
-      <div className="max-w-md rounded-3xl border border-[#dce6db] bg-white p-8 shadow-xl">
-        <h2 className="font-display text-xl font-bold text-[#11382b]">Access Restricted</h2>
-        <p className="mt-2 text-xs text-[#567364]">
+      <div className="max-w-md rounded-3xl border border-[#d9e6e0] bg-white p-8 shadow-xl">
+        <h2 className="text-[24px] font-semibold text-[#122621]">Access Restricted</h2>
+        <p className="mt-2 text-[14px] text-[#527065]">
           Your account role does not have permission to view staff administrative consoles.
         </p>
         <a
           href="/"
-          className="mt-6 inline-block rounded-full bg-[#11382b] px-5 py-2 text-xs font-bold text-white hover:bg-[#184838] shadow-xs"
+          className="mt-6 inline-block rounded-xl bg-[#0e615c] px-5 py-2.5 text-[15px] font-medium text-white hover:bg-[#0a4c48] shadow-xs"
         >
           Return to Patient Portal
         </a>

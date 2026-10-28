@@ -128,11 +128,11 @@ function LoginForm() {
         <div className="mb-6 flex items-center justify-between">
           <a
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#567364] hover:text-[#11382b] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[14px] font-normal text-[#527065] hover:text-[#0e615c] transition-colors"
           >
             ← Back to Front Desk
           </a>
-          <span className="rounded-full bg-[#005d52]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#005d52] uppercase tracking-wider">
+          <span className="text-[13px] font-medium text-[#3fb484] underline underline-offset-4 decoration-[#3fb484]">
             Afiya Portal
           </span>
         </div>
@@ -145,10 +145,10 @@ function LoginForm() {
               className="h-16 w-auto object-contain drop-shadow-xs"
             />
           </div>
-          <h1 className="font-display mt-2 text-2xl font-bold text-[#005d52]">
+          <h1 className="font-display mt-2 text-[28px] sm:text-[32px] font-medium text-[#0e615c]">
             {mode === "login" ? "Clinic System Sign In" : "New Patient Registration"}
           </h1>
-          <p className="mt-1 text-xs text-[#567364]">
+          <p className="mt-1.5 text-[14px] font-normal text-[#527065]">
             {mode === "login"
               ? "Sign in with your staff account (Doctor, Receptionist, Admin) or patient credentials."
               : "Create your personal clinical profile and online portal account."}
@@ -156,15 +156,15 @@ function LoginForm() {
         </div>
 
         {inIframe && (
-          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-            <p className="text-xs leading-relaxed text-amber-900">
+          <div className="mb-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+            <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-[#0e615c]" />
+            <p className="text-[12.5px] font-normal leading-relaxed text-[#122621]">
               This preview is running inside an embedded frame. If sign-in doesn&apos;t stick,{" "}
               <a
                 href={typeof window !== "undefined" ? window.location.href.split("?")[0] : "/login"}
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold underline underline-offset-2"
+                className="font-medium text-[#0e615c] underline underline-offset-2 decoration-[#3fb484]"
               >
                 open the app in a new tab
               </a>{" "}
@@ -173,19 +173,19 @@ function LoginForm() {
           </div>
         )}
 
-        <div className="rounded-3xl border border-[#dce6db] bg-white p-7 sm:p-8 shadow-xl">
+        <div className="rounded-3xl border border-[#d9e6e0] bg-white p-7 sm:p-8 shadow-xl">
           {/* Mode Switcher */}
-          <div className="mb-6 grid grid-cols-2 gap-1.5 rounded-2xl bg-[#f2f6f1] p-1 border border-[#e2ece0]">
+          <div className="mb-6 grid grid-cols-2 gap-1.5 rounded-2xl bg-[#f3f8f5] p-1 border border-[#e2eee8]">
             <button
               type="button"
               onClick={() => {
                 setMode("login");
                 setError(null);
               }}
-              className={`rounded-xl py-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`rounded-xl py-2 text-[13px] font-medium transition-all cursor-pointer ${
                 mode === "login"
-                  ? "bg-[#11382b] text-white shadow-xs font-bold"
-                  : "text-[#567364] hover:text-[#11382b]"
+                  ? "bg-[#0e615c] text-white shadow-xs"
+                  : "text-[#527065] hover:text-[#0e615c]"
               }`}
             >
               Sign In
@@ -196,10 +196,10 @@ function LoginForm() {
                 setMode("register");
                 setError(null);
               }}
-              className={`rounded-xl py-2 text-xs font-semibold transition-all cursor-pointer ${
+              className={`rounded-xl py-2 text-[13px] font-medium transition-all cursor-pointer ${
                 mode === "register"
-                  ? "bg-[#11382b] text-white shadow-xs font-bold"
-                  : "text-[#567364] hover:text-[#11382b]"
+                  ? "bg-[#0e615c] text-white shadow-xs"
+                  : "text-[#527065] hover:text-[#0e615c]"
               }`}
             >
               Patient Registration
@@ -208,8 +208,8 @@ function LoginForm() {
 
           {mode === "login" ? (
             <div>
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#567364]">
-                1-Click Test Accounts (Demo Identities)
+              <p className="mb-2.5 text-[13px] font-normal text-[#527065]">
+                1-Click test accounts (demo identities)
               </p>
               <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {DEMO_ACCOUNTS.map((a) => (
@@ -220,10 +220,10 @@ function LoginForm() {
                       setEmail(a.email);
                       setPassword("demo1234");
                     }}
-                    className={`rounded-xl border px-3 py-2 text-left text-xs transition-all cursor-pointer ${
+                    className={`rounded-xl border px-3 py-2 text-left text-[13px] font-normal transition-all cursor-pointer ${
                       email === a.email
-                        ? "border-[#11382b] bg-[#11382b] text-white font-bold shadow-xs"
-                        : "border-[#dce6db] bg-[#f8faf6] text-[#243a2f] hover:border-[#11382b]/40 hover:bg-white"
+                        ? "border-[#0e615c] bg-[#0e615c] text-white font-medium shadow-xs"
+                        : "border-[#d9e6e0] bg-[#f6faf8] text-[#122621] hover:border-[#0e615c]/40 hover:bg-white"
                     }`}
                   >
                     {a.label}
@@ -233,7 +233,7 @@ function LoginForm() {
 
               <form onSubmit={submitLogin} className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1.5 block text-[14px] font-medium text-[#122621]">
                     Account Email
                   </label>
                   <input
@@ -241,12 +241,12 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="doctor@demo.clinic or your-email@domain.com"
-                    className="h-11 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-4 text-xs text-[#162720] placeholder:text-[#7f998b] focus:border-[#11382b] focus:bg-white focus:outline-none transition-all"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-4 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1.5 block text-[14px] font-medium text-[#122621]">
                     Password
                   </label>
                   <input
@@ -254,17 +254,17 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter account password"
-                    className="h-11 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-4 text-xs text-[#162720] placeholder:text-[#7f998b] focus:border-[#11382b] focus:bg-white focus:outline-none transition-all"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-4 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none transition-all"
                     required
                   />
                 </div>
-                {error && <p className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-2.5 text-xs text-rose-700 font-medium">{error}</p>}
+                {error && <p className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-2.5 text-[12.5px] font-normal text-[#d9432f]">{error}</p>}
                 <button
                   type="submit"
                   disabled={busy}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#11382b] text-xs font-bold text-white transition-all hover:bg-[#184838] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-md"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0e615c] text-[15px] font-medium text-white transition-all hover:bg-[#0a4c48] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-md"
                 >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin text-[#d49b35]" /> : <LogIn className="h-4 w-4 text-[#d49b35]" />}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin text-[#3fb484]" /> : <LogIn className="h-4 w-4 text-[#3fb484]" />}
                   Sign In to Clinic Portal
                 </button>
               </form>
@@ -273,7 +273,7 @@ function LoginForm() {
             <form onSubmit={submitRegister} className="space-y-3.5">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Full Name *
                   </label>
                   <input
@@ -282,11 +282,11 @@ function LoginForm() {
                     placeholder="e.g. Alex Morgan"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Email *
                   </label>
                   <input
@@ -295,14 +295,14 @@ function LoginForm() {
                     placeholder="alex@example.com"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Password * (min 6 chars)
                   </label>
                   <input
@@ -311,11 +311,11 @@ function LoginForm() {
                     minLength={6}
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Phone Number
                   </label>
                   <input
@@ -323,31 +323,31 @@ function LoginForm() {
                     placeholder="+1 (555) 000-0000"
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Date of Birth
                   </label>
                   <input
                     type="date"
                     value={regDob}
                     onChange={(e) => setRegDob(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-2 text-[15px] font-normal text-[#122621] focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Gender
                   </label>
                   <select
                     value={regGender}
                     onChange={(e) => setRegGender(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-2 text-[15px] font-normal text-[#122621] focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   >
                     <option value="unspecified">Select...</option>
                     <option value="Female">Female</option>
@@ -357,7 +357,7 @@ function LoginForm() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Blood Group
                   </label>
                   <input
@@ -365,14 +365,14 @@ function LoginForm() {
                     placeholder="e.g. O+"
                     value={regBlood}
                     onChange={(e) => setRegBlood(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-2 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-2 text-[15px] font-normal text-[#122621] focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Known Allergies
                   </label>
                   <input
@@ -380,11 +380,11 @@ function LoginForm() {
                     placeholder="e.g. Penicillin, Peanuts, None"
                     value={regAllergies}
                     onChange={(e) => setRegAllergies(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Insurance Provider
                   </label>
                   <input
@@ -392,14 +392,14 @@ function LoginForm() {
                     placeholder="e.g. Blue Cross / Self-Pay"
                     value={regInsurance}
                     onChange={(e) => setRegInsurance(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Emergency Contact Name
                   </label>
                   <input
@@ -407,11 +407,11 @@ function LoginForm() {
                     placeholder="Contact full name"
                     value={regEmergencyName}
                     onChange={(e) => setRegEmergencyName(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#436252]">
+                  <label className="mb-1 block text-[14px] font-medium text-[#122621]">
                     Emergency Contact Phone
                   </label>
                   <input
@@ -419,26 +419,26 @@ function LoginForm() {
                     placeholder="Contact phone"
                     value={regEmergencyPhone}
                     onChange={(e) => setRegEmergencyPhone(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-[#d2e0d1] bg-[#f8faf6] px-3 text-xs text-[#162720] focus:border-[#11382b] focus:bg-white focus:outline-none"
+                    className="h-11 w-full rounded-xl border border-[#d9e6e0] bg-[#f6faf8] px-3 text-[15px] font-normal text-[#122621] placeholder:text-[#527065]/60 focus:border-[#0e615c] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
-              {error && <p className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-2.5 text-xs text-rose-700 font-medium">{error}</p>}
+              {error && <p className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-2.5 text-[12.5px] font-normal text-[#d9432f]">{error}</p>}
 
               <button
                 type="submit"
                 disabled={busy}
-                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#11382b] text-xs font-bold text-white transition-all hover:bg-[#184838] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-md"
+                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0e615c] text-[15px] font-medium text-white transition-all hover:bg-[#0a4c48] active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-md"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin text-[#d49b35]" /> : <UserPlus className="h-4 w-4 text-[#d49b35]" />}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin text-[#3fb484]" /> : <UserPlus className="h-4 w-4 text-[#3fb484]" />}
                 Create Patient Account
               </button>
             </form>
           )}
 
-          <p className="mt-5 flex items-start gap-2 text-[11px] leading-relaxed text-[#567364]">
-            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d49b35]" />
+          <p className="mt-5 flex items-start gap-2 text-[12.5px] font-normal leading-relaxed text-[#527065]">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#3fb484]" />
             Security & Safety: Passwords are scrypt-hashed. Sessions use httpOnly partitioned cookies.
             Clinic records and patient health information are strictly isolated per role.
           </p>

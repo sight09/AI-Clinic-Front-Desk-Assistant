@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bone: #f7f8f4;
-  --color-bone-deep: #edf1e9;
-  --color-pine: #11382b;
-  --color-pine-soft: #184838;
-  --color-moss: #506f5f;
-  --color-sage: #9bb7a2;
-  --color-gold: #d49b35;
+  --color-bone: #f6faf8;
+  --color-bone-deep: #ebf3ef;
+  --color-pine: #0e615c;
+  --color-pine-soft: #0a4c48;
+  --color-moss: #527065;
+  --color-sage: #8cb5a3;
+  --color-gold: #3fb484; /* Replaced PDF gold with Afiya Logo Vibrant Leaf Mint */
+  --color-mint: #3fb484;
   --color-pulse: #d9432f;
   --color-cream: #ffffff;
-  --color-ink: #182822;
+  --color-ink: #122621;
+  --color-ink-muted: #527065;
 
-  --font-display: "Newsreader", "Playfair Display", Georgia, serif;
-  --font-body: "Plus Jakarta Sans", "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 
@@ -34,6 +36,10 @@ body {
 .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
+}
+
+.font-body {
+  font-family: var(--font-body);
 }
 
 /* Subtle paper grain */
@@ -93,16 +99,20 @@ body {
 }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }
 
-/* Modern subtle focus - zero yellow outlines */
-:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(17, 56, 43, 0.22);
+/* Modern subtle focus - zero yellow outlines or rogue box-shadows */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-input:focus,
-textarea:focus,
-select:focus,
-button:focus {
+:focus-visible {
   outline: none;
 }
 
@@ -225,20 +235,383 @@ button:focus {
 }
 
 .clinic-table-th {
-  background-color: #f3f7f2;
-  color: #436252;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  background-color: #f3f8f5;
+  color: #527065;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none; /* sentence case as per specification */
+  letter-spacing: 0.01em;
   padding: 0.75rem 1.25rem;
 }
 
 .clinic-table-td {
   padding: 0.875rem 1.25rem;
-  font-size: 0.8125rem;
-  color: #1a2f26;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #122621;
   border-top: 1px solid #edf3eb;
+}
+
+/* ==========================================================================
+   Design Specification: Typography & Sizing System
+   Governing rule: Fraunces (serif) appears only in header wordmark, hero
+   headlines, and publication titles. Public Sans (sans) covers everything else.
+   Colors: Derived from the Afiya Logo (#0e615c, #3fb484, #122621, #527065).
+   ========================================================================== */
+
+.font-fraunces {
+  font-family: var(--font-display);
+}
+
+.font-public-sans {
+  font-family: var(--font-body);
+}
+
+/* Header / Top Navigation */
+.spec-logo-wordmark {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: #0e615c;
+}
+
+.spec-logo-subtitle {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-nav-link {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #527065;
+  transition: color 0.15s ease;
+}
+.spec-nav-link:hover {
+  color: #0e615c;
+}
+
+.spec-nav-link-active {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #0e615c;
+  text-decoration: underline;
+  text-decoration-color: #3fb484;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+/* Hero Section */
+.spec-eyebrow {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #3fb484;
+  text-decoration: underline;
+  text-transform: none;
+  text-underline-offset: 4px;
+}
+
+.spec-hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 5.5vw, 64px);
+  font-weight: 500;
+  line-height: 1.1;
+  color: #0e615c;
+}
+
+.spec-hero-subhead {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #527065;
+}
+
+.spec-cta-primary {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  background-color: #0e615c;
+  color: #ffffff;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.625rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.spec-cta-primary:hover {
+  background-color: #0a4c48;
+}
+
+.spec-cta-secondary {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  background-color: transparent;
+  color: #0e615c;
+  border: 1.5px solid #0e615c;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.625rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.spec-cta-secondary:hover {
+  background-color: rgba(14, 97, 92, 0.06);
+}
+
+/* Sidebar */
+.spec-sidebar-section-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+  color: #527065;
+}
+
+.spec-sidebar-nav-item {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-sidebar-nav-item-active {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: #0e615c;
+  border-left: 3px solid #3fb484;
+}
+
+.spec-sidebar-icon {
+  width: 19px;
+  height: 19px;
+}
+
+/* Dashboard (Internal / Admin / Doctor / Receptionist - Pure utility surface, NO serif) */
+.spec-dashboard-page-title {
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-card-title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-big-stat-number {
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 700;
+  color: #0e615c;
+  line-height: 1;
+}
+
+.spec-stat-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-table-header {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none; /* sentence case */
+  color: #527065;
+}
+
+.spec-table-cell {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #122621;
+}
+
+.spec-status-badge {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Forms */
+.spec-field-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: #122621;
+}
+
+.spec-input-text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: #122621;
+}
+.spec-input-text::placeholder {
+  color: #527065;
+  opacity: 0.75;
+}
+
+.spec-helper-text {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-error-text {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 400;
+  color: #d9432f;
+}
+
+.spec-submit-button {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  background-color: #0e615c;
+  color: #ffffff;
+}
+
+/* Profile */
+.spec-profile-display-name {
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-profile-handle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-profile-bio {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #122621;
+}
+
+.spec-profile-stat-number {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-profile-stat-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-profile-action-btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.spec-profile-tab {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #527065;
+}
+
+.spec-profile-tab-active {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #0e615c;
+  text-decoration: underline;
+  text-decoration-color: #3fb484;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+/* Feed & Posts */
+.spec-feed-card {
+  max-width: 480px;
+}
+
+.spec-feed-username {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-feed-subtitle {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: #527065;
+}
+
+.spec-feed-stat-count {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-feed-caption-user {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #122621;
+}
+
+.spec-feed-caption-body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #122621;
+}
+
+.spec-feed-hashtag {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: #0e615c;
+}
+
+.spec-feed-timestamp {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #527065;
+}
+
+.spec-feed-grid-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.spec-feed-view-all {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: #527065;
 }
 
 

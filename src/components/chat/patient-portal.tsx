@@ -57,6 +57,7 @@ import {
   Sparkles,
   Stethoscope,
   Trash2,
+  TrendingUp,
   User,
   UserCheck,
   UserPlus,
@@ -219,6 +220,7 @@ export type PatientProfileData = {
   insuranceProvider?: string;
   insurancePolicyNumber?: string;
   medicalHistory?: string;
+  profileId?: string;
 };
 
 export type AppNotification = {
@@ -318,6 +320,41 @@ function downloadIcs(appt: Appointment) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/* ------------------------------- typing note component --------------------- */
+
+function TypingWelcomeNote() {
+  const fullText = "How can Afiya assist you today?";
+  const [displayedText, setDisplayedText] = useState("");
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    setDisplayedText("");
+    setIsDone(false);
+
+    const timer = setInterval(() => {
+      i++;
+      if (i <= fullText.length) {
+        setDisplayedText(fullText.slice(0, i));
+      } else {
+        setIsDone(true);
+        clearInterval(timer);
+      }
+    }, 45);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <p className="mt-3.5 text-[15px] sm:text-[17px] md:text-[18.5px] lg:text-[19.5px] text-[#527065] w-full text-center font-normal leading-relaxed min-h-[30px] sm:whitespace-nowrap">
+      {displayedText}
+      {!isDone && (
+        <span className="inline-block w-[2px] h-[1.15em] ml-1 bg-[#3fb484] animate-pulse align-middle" />
+      )}
+    </p>
+  );
 }
 
 /* ------------------------------- component --------------------------------- */
@@ -696,16 +733,51 @@ export function PatientPortal({
     e.preventDefault();
     setProfileSaving(true);
     try {
+      const payload = {
+        name: editProfile.name || undefined,
+        phone: editProfile.phone || "",
+        dateOfBirth: editProfile.dateOfBirth || "",
+        gender: editProfile.gender || "unspecified",
+        address: editProfile.address || "",
+        bloodGroup: editProfile.bloodGroup || "",
+        allergies: editProfile.allergies || "",
+        emergencyContactName: editProfile.emergencyContactName || "",
+        emergencyContactPhone: editProfile.emergencyContactPhone || "",
+        insuranceProvider: editProfile.insuranceProvider || "",
+        insurancePolicyNumber: editProfile.insurancePolicyNumber || "",
+        medicalHistory: editProfile.medicalHistory || "",
+      };
+
       const res = await fetch("/api/patient/profile", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(editProfile),
+        body: JSON.stringify(payload),
       });
+
       if (res.ok) {
+        // Immediately reflect changes on Digital Health Card and across the portal
+        setProfile((prev) => ({
+          ...(prev || {}),
+          ...payload,
+          id: prev?.id || "AF-001",
+          email: prev?.email || currentUser?.email || "patient@afiya.clinic",
+          role: prev?.role || "patient",
+          profileId: prev?.profileId || "PID-1",
+        } as PatientProfileData));
+
+        if (payload.name && currentUser) {
+          currentUser.name = payload.name;
+        }
+
         setProfileSavedMsg(true);
-        setTimeout(() => setProfileSavedMsg(false), 3000);
+        setTimeout(() => setProfileSavedMsg(false), 4000);
         await refreshAllData();
+      } else {
+        const errData = await res.json().catch(() => null);
+        alert(errData?.error?.message || "Failed to save profile. Please check all fields.");
       }
+    } catch {
+      alert("An error occurred while saving profile. Please try again.");
     } finally {
       setProfileSaving(false);
     }
@@ -836,10 +908,10 @@ export function PatientPortal({
               <a href="/" className="flex items-center gap-2.5 group">
                 <img src="/afiya-icon.png" alt="Afiya" className="h-8 w-8 object-contain rounded-lg" />
                 <div>
-                  <span className="font-display text-[17px] font-bold text-white tracking-tight block leading-tight">
+                  <span className="font-display text-[18px] font-medium text-white tracking-tight block leading-tight">
                     Afiya
                   </span>
-                  <span className="text-[11px] font-semibold tracking-wider text-[#a2c2b0] block">
+                  <span className="font-sans text-[12px] font-normal tracking-normal text-[#a2c2b0] block">
                     Better Care Starts Here
                   </span>
                 </div>
@@ -876,21 +948,17 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={startNewConsultation}
-                className="w-full flex items-center justify-between rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 px-3.5 py-2.5 text-xs font-semibold text-white transition-all shadow-xs group cursor-pointer"
+                className="w-full flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 px-3.5 py-2.5 text-[14px] font-medium text-white transition-all shadow-xs cursor-pointer text-center"
               >
-                <div className="flex items-center gap-2.5">
-                  <MessageSquarePlus className="h-4 w-4 text-[#d49b35] group-hover:scale-110 transition-transform" />
-                  <span>New Consultation</span>
-                </div>
-                <span className="text-[11px] text-white/40 font-mono">⌘N</span>
+                <span>New Consultation</span>
               </button>
             ) : (
               <button
                 onClick={startNewConsultation}
-                className="h-10 w-10 mx-auto rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-[#d49b35] flex items-center justify-center transition-all shadow-xs cursor-pointer hover:scale-105"
-                title="New Consultation (⌘N)"
+                className="h-10 w-10 mx-auto rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white flex items-center justify-center transition-all shadow-xs cursor-pointer text-sm font-bold"
+                title="New Consultation"
               >
-                <MessageSquarePlus className="h-5 w-5" />
+                +
               </button>
             )}
           </div>
@@ -898,8 +966,8 @@ export function PatientPortal({
           {/* 1. CLINIC SERVICES (PRIMARY - IMMEDIATELY AFTER NEW CHAT) */}
           <nav className="mt-4 space-y-1">
             {sidebarOpen && (
-              <p className="px-2 pb-1 text-[11px] font-bold tracking-wider text-white/45 uppercase">
-                Clinic Services
+              <p className="px-2 pb-1.5 text-[13px] font-normal text-white/60 normal-case">
+                Clinic services
               </p>
             )}
 
@@ -907,14 +975,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("chat")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "chat"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <MessageSquare className={`h-[19px] w-[19px] shrink-0 ${activeTab === "chat" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>AI Front-Desk</span>
                 </div>
                 <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/20">
@@ -926,12 +994,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("chat")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                   activeTab === "chat"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
-                title="AI Front-Desk Assistant"
+                title="AI Front-Desk"
               >
-                <MessageSquare className={`h-5 w-5 ${activeTab === "chat" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <MessageSquare className={`h-[19px] w-[19px] shrink-0 ${activeTab === "chat" ? "text-[#3fb484]" : "text-white/60"}`} />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400" />
               </button>
             )}
@@ -940,18 +1008,18 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("appointments")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "appointments"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <CalendarDays className={`h-4 w-4 ${activeTab === "appointments" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <CalendarDays className={`h-[19px] w-[19px] shrink-0 ${activeTab === "appointments" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Appointments</span>
                 </div>
                 {confirmedAppointments.length > 0 && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#d49b35] text-pine">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#3fb484] text-[#07241a]">
                     {confirmedAppointments.length}
                   </span>
                 )}
@@ -961,14 +1029,14 @@ export function PatientPortal({
                 onClick={() => setActiveTab("appointments")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                   activeTab === "appointments"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title={`Appointments (${confirmedAppointments.length})`}
               >
-                <CalendarDays className={`h-5 w-5 ${activeTab === "appointments" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <CalendarDays className={`h-[19px] w-[19px] shrink-0 ${activeTab === "appointments" ? "text-[#3fb484]" : "text-white/60"}`} />
                 {confirmedAppointments.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#d49b35]" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#3fb484]" />
                 )}
               </button>
             )}
@@ -977,14 +1045,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("records")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "records"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <ClipboardList className={`h-4 w-4 ${activeTab === "records" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <ClipboardList className={`h-[19px] w-[19px] shrink-0 ${activeTab === "records" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Visit Records</span>
                 </div>
                 {records.length > 0 && (
@@ -998,12 +1066,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("records")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                   activeTab === "records"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title={`Visit Records (${records.length})`}
               >
-                <ClipboardList className={`h-5 w-5 ${activeTab === "records" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <ClipboardList className={`h-[19px] w-[19px] shrink-0 ${activeTab === "records" ? "text-[#3fb484]" : "text-white/60"}`} />
               </button>
             )}
 
@@ -1011,18 +1079,18 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("billing")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "billing"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <CreditCard className={`h-4 w-4 ${activeTab === "billing" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <CreditCard className={`h-[19px] w-[19px] shrink-0 ${activeTab === "billing" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Billing &amp; Receipts</span>
                 </div>
                 {pendingTotal > 0 && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white animate-pulse">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#3fb484] text-[#07241a]">
                     ${pendingTotal} Due
                   </span>
                 )}
@@ -1032,14 +1100,14 @@ export function PatientPortal({
                 onClick={() => setActiveTab("billing")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                   activeTab === "billing"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title={`Billing & Receipts ${pendingTotal > 0 ? `($${pendingTotal} Due)` : ""}`}
               >
-                <CreditCard className={`h-5 w-5 ${activeTab === "billing" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <CreditCard className={`h-[19px] w-[19px] shrink-0 ${activeTab === "billing" ? "text-[#3fb484]" : "text-white/60"}`} />
                 {pendingTotal > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#3fb484]" />
                 )}
               </button>
             )}
@@ -1048,14 +1116,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "profile"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <QrCode className={`h-4 w-4 ${activeTab === "profile" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <QrCode className={`h-[19px] w-[19px] shrink-0 ${activeTab === "profile" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Digital Health ID</span>
                 </div>
                 <span className="text-[11px] text-white/50 font-medium">Card</span>
@@ -1065,12 +1133,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("profile")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === "profile"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title="Digital Health ID Card"
               >
-                <QrCode className={`h-5 w-5 ${activeTab === "profile" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <QrCode className={`h-[19px] w-[19px] shrink-0 ${activeTab === "profile" ? "text-[#3fb484]" : "text-white/60"}`} />
               </button>
             )}
 
@@ -1078,14 +1146,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("clinic")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "clinic"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Stethoscope className={`h-4 w-4 ${activeTab === "clinic" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <Stethoscope className={`h-[19px] w-[19px] shrink-0 ${activeTab === "clinic" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Doctors Directory</span>
                 </div>
                 <span className="text-[11px] text-white/50 font-medium">{providersList.length || 3}</span>
@@ -1095,12 +1163,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("clinic")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === "clinic"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title="Doctors Directory"
               >
-                <Stethoscope className={`h-5 w-5 ${activeTab === "clinic" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <Stethoscope className={`h-[19px] w-[19px] shrink-0 ${activeTab === "clinic" ? "text-[#3fb484]" : "text-white/60"}`} />
               </button>
             )}
 
@@ -1108,14 +1176,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "notifications"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Bell className={`h-4 w-4 ${activeTab === "notifications" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <Bell className={`h-[19px] w-[19px] shrink-0 ${activeTab === "notifications" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Notifications</span>
                 </div>
                 {unreadNotifications > 0 && (
@@ -1129,12 +1197,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("notifications")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                   activeTab === "notifications"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title={`Notifications (${unreadNotifications} unread)`}
               >
-                <Bell className={`h-5 w-5 ${activeTab === "notifications" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <Bell className={`h-[19px] w-[19px] shrink-0 ${activeTab === "notifications" ? "text-[#3fb484]" : "text-white/60"}`} />
                 {unreadNotifications > 0 && (
                   <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500" />
                 )}
@@ -1145,14 +1213,14 @@ export function PatientPortal({
             {sidebarOpen ? (
               <button
                 onClick={() => setActiveTab("safety")}
-                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-[15px] transition-all cursor-pointer ${
                   activeTab === "safety"
-                    ? "bg-[#184838] text-white shadow-xs"
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "font-medium text-white bg-[#0e615c] shadow-xs border border-[#3fb484]/30"
+                    : "font-normal text-white/70 hover:bg-white/10 hover:text-white border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className={`h-4 w-4 ${activeTab === "safety" ? "text-[#d49b35]" : "text-white/50"}`} />
+                  <ShieldCheck className={`h-[19px] w-[19px] shrink-0 ${activeTab === "safety" ? "text-[#3fb484]" : "text-white/50"}`} />
                   <span>Safety &amp; Rules</span>
                 </div>
                 <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">
@@ -1164,12 +1232,12 @@ export function PatientPortal({
                 onClick={() => setActiveTab("safety")}
                 className={`h-10 w-10 mx-auto rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                   activeTab === "safety"
-                    ? "bg-[#184838] text-white shadow-xs"
+                    ? "bg-[#0e615c] text-white shadow-xs border border-[#3fb484]/30"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
                 title="Clinical Safety & Rules (100% Deterministic)"
               >
-                <ShieldCheck className={`h-5 w-5 ${activeTab === "safety" ? "text-[#d49b35]" : "text-white/60"}`} />
+                <ShieldCheck className={`h-[19px] w-[19px] shrink-0 ${activeTab === "safety" ? "text-[#3fb484]" : "text-white/60"}`} />
               </button>
             )}
           </nav>
@@ -1272,84 +1340,70 @@ export function PatientPortal({
       {/* 2. CHATGPT-MOOD MAIN WORKSPACE CANVAS                                 */}
       {/* --------------------------------------------------------------------- */}
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[#ffffff] relative overflow-hidden">
-        {/* TOP COMMAND BAR */}
-        <header className="h-14 shrink-0 border-b border-[#e8eee6] px-4 sm:px-6 flex items-center justify-between gap-4 bg-[#fcfdfa]/90 backdrop-blur-md z-10">
-          <div className="flex items-center gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display text-base font-bold text-[#11382b] capitalize leading-none">
-                  {activeTab === "chat" && "AI Front-Desk Assistant"}
-                  {activeTab === "appointments" && "Appointments & Schedule Status"}
-                  {activeTab === "records" && "Clinical History & Records"}
-                  {activeTab === "billing" && "Billing, Invoices & Receipts"}
-                  {activeTab === "profile" && "Digital Health Card"}
-                  {activeTab === "clinic" && "Certified Physicians Directory"}
-                  {activeTab === "notifications" && "Notification Inbox"}
-                  {activeTab === "safety" && "Clinical AI Guardrails"}
-                </h2>
-
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  <span>{slotCount} slots open</span>
-                </span>
+        {/* TOP COMMAND BAR (Hidden in chat view for clean, full-height chat canvas) */}
+        {activeTab !== "chat" && (
+          <header className="h-14 shrink-0 border-b border-[#e8eee6] px-4 sm:px-6 flex items-center justify-between gap-4 bg-[#fcfdfa]/90 backdrop-blur-md z-10">
+            <div className="flex items-center gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-sans text-[18px] font-semibold text-[#122621] capitalize leading-none">
+                    {activeTab === "appointments" && "Appointments & Schedule Status"}
+                    {activeTab === "records" && "Clinical History & Records"}
+                    {activeTab === "billing" && "Billing, Invoices & Receipts"}
+                    {activeTab === "profile" && "Digital Health Card"}
+                    {activeTab === "clinic" && "Certified Physicians Directory"}
+                    {activeTab === "notifications" && "Notification Inbox"}
+                    {activeTab === "safety" && "Clinical AI Guardrails"}
+                  </h2>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Action Cluster */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Search input in non-chat views */}
-            {activeTab !== "chat" && activeTab !== "safety" && activeTab !== "profile" && (
-              <div className="relative w-36 sm:w-52">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6c8a7b]" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Filter ${activeTab}…`}
-                  className="w-full h-8 rounded-full border border-[#d2e0d1] bg-[#f8faf6] pl-8 pr-3 text-xs text-[#162720] placeholder:text-[#7f998b] focus:border-[#11382b] focus:bg-white focus:outline-none transition-all"
-                />
-              </div>
-            )}
+            {/* Right Action Cluster */}
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Search input in non-chat views */}
+              {activeTab !== "safety" && activeTab !== "profile" && (
+                <div className="relative w-36 sm:w-52">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#6c8a7b]" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={`Filter ${activeTab}…`}
+                    className="w-full h-8 rounded-full border border-[#d2e0d1] bg-[#f8faf6] pl-8 pr-3 text-xs text-[#162720] placeholder:text-[#7f998b] focus:border-[#11382b] focus:bg-white focus:outline-none transition-all"
+                  />
+                </div>
+              )}
 
-            {/* Quick Info & Hours Modal Launcher */}
-            <button
-              onClick={() => setShowInfoModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e3d5] bg-white px-3 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf5ec] shadow-2xs transition-colors cursor-pointer"
-              title="Clinic hours and address"
-            >
-              <Info className="h-3.5 w-3.5 text-[#3f5f4f]" />
-              <span className="hidden md:inline">Clinic Info</span>
-            </button>
-
-            {/* Universal Sign In / Account Status */}
-            {signedIn ? (
-              <button
-                type="button"
-                onClick={() => setShowUserProfileModal(true)}
-                className="flex items-center gap-2 text-xs text-[#11382b] bg-[#f3f7f2] hover:bg-[#e4ede3] border border-[#d6e3d5] rounded-full px-3 py-1.5 transition-colors cursor-pointer"
-                title="View User Profile"
-              >
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="font-semibold truncate max-w-[140px]">{currentUser?.name}</span>
-              </button>
-            ) : (
-              <a
-                href="/login"
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#11382b] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#1a4a3a] shadow-xs transition-colors cursor-pointer"
-              >
-                <LogIn className="h-3.5 w-3.5 text-[#d49b35]" />
-                <span>Sign In</span>
-              </a>
-            )}
-          </div>
-        </header>
+              {/* Universal Sign In for logged-out visitors */}
+              {!signedIn && (
+                <a
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#0e615c] px-4 py-1.5 text-[14px] font-medium text-white hover:bg-[#0a4c48] shadow-xs transition-colors cursor-pointer"
+                >
+                  <LogIn className="h-3.5 w-3.5 text-[#3fb484]" />
+                  <span>Sign In</span>
+                </a>
+              )}
+            </div>
+          </header>
+        )}
 
         {/* ------------------------------------------------------------------- */}
         {/* TAB 1: CHATGPT-MOOD CONVERSATION FLOW                               */}
         {/* ------------------------------------------------------------------- */}
         {activeTab === "chat" && (
-          <div className="flex-1 flex flex-col h-[calc(100vh-56px)] overflow-hidden bg-[#ffffff]">
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#ffffff] relative">
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden absolute top-3.5 left-3.5 z-20 p-2 rounded-xl bg-white/90 border border-[#d9e6e0] text-[#0e615c] hover:bg-[#f6faf8] shadow-2xs transition-all cursor-pointer"
+              title="Open navigation"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+
             {/* Scrollable Messages Stream or Gemini/Claude Welcome Hero */}
             <div
               ref={scrollRef}
@@ -1359,46 +1413,45 @@ export function PatientPortal({
                 /* ------------------------------------------------------------- */
                 /* GEMINI / CLAUDE LLM HERO WELCOME EXPERIENCE                   */
                 /* ------------------------------------------------------------- */
-                <div className="max-w-2xl mx-auto w-full my-auto flex flex-col items-center text-center py-6 sm:py-8 animate-in fade-in duration-500">
+                <div className="max-w-4xl xl:max-w-5xl mx-auto w-full my-auto flex flex-col items-center text-center py-6 sm:py-8 animate-in fade-in duration-500">
                   {/* Mascot with Animated Floating and Live Badge */}
                   <div className="mb-4">
                     <ClinicalMascot size="lg" showBadge={true} />
                   </div>
 
                   {/* Dynamic Time-of-Day Greeting (Gemini / Claude mood) */}
-                  <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#11382b]">
+                  <h1 className="font-display text-[38px] sm:text-[48px] lg:text-[56px] font-medium tracking-tight text-[#0e615c] leading-tight">
                     {new Date().getHours() < 12
                       ? "Good morning"
                       : new Date().getHours() < 17
                       ? "Good afternoon"
                       : "Good evening"}
                     ,{" "}
-                    <span className="text-[#20684f]">
+                    <span className="text-[#3fb484]">
                       {signedIn && currentUser?.name ? currentUser.name.split(" ")[0] : "friend"}
                     </span>
                     .
                   </h1>
 
-                  <p className="mt-2.5 text-xs sm:text-sm text-[#466656] max-w-md mx-auto font-normal leading-relaxed">
-                    How can Afiya assist your health journey today? Better Care Starts Here. Check symptoms, schedule certified physician visits, or review clinic billing.
-                  </p>
+                  {/* Typing Animation Greeting Note */}
+                  <TypingWelcomeNote />
 
-                  {/* Gemini/Claude 4 Interactive Action Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-6 text-left">
+                  {/* 4 Interactive Action Cards - display: flex */}
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full max-w-3xl mt-6 text-left">
                     <button
                       onClick={() => send("I have had a mild headache and fever for two days.")}
                       disabled={busy}
-                      className="group p-3.5 rounded-2xl border border-[#d6e3d5] bg-white hover:border-[#11382b] hover:bg-[#f8fbf7] hover:shadow-2xs transition-all duration-200 flex items-start gap-3 text-left lift cursor-pointer"
+                      className="flex-1 min-w-[260px] sm:basis-[calc(50%-0.5rem)] group p-4 rounded-xl border border-[#d9e6e0] bg-white hover:border-[#0e615c] hover:bg-[#f6faf8] hover:shadow-xs transition-all duration-200 flex items-start gap-3.5 text-left cursor-pointer"
                     >
-                      <div className="p-2 rounded-xl bg-emerald-50 text-[#11382b] group-hover:bg-[#11382b] group-hover:text-white transition-colors shrink-0">
+                      <div className="p-2.5 rounded-lg bg-[#ebf5f1] text-[#0e615c] group-hover:bg-[#0e615c] group-hover:text-white transition-colors shrink-0">
                         <Activity className="h-4 w-4" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-[#11382b]">Check Symptoms</p>
-                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#11382b]" />
+                          <p className="text-[14px] font-semibold text-[#122621]">Check Symptoms</p>
+                          <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#0e615c]" />
                         </div>
-                        <p className="text-[11px] text-[#557565] mt-0.5 leading-snug">
+                        <p className="text-[12.5px] text-[#527065] mt-0.5 leading-snug">
                           Report fever, pain, or duration for clinical triage intake
                         </p>
                       </div>
@@ -1407,17 +1460,17 @@ export function PatientPortal({
                     <button
                       onClick={() => send("I would like to book an appointment with a doctor.")}
                       disabled={busy}
-                      className="group p-3.5 rounded-2xl border border-[#d6e3d5] bg-white hover:border-[#11382b] hover:bg-[#f8fbf7] hover:shadow-2xs transition-all duration-200 flex items-start gap-3 text-left lift cursor-pointer"
+                      className="flex-1 min-w-[260px] sm:basis-[calc(50%-0.5rem)] group p-4 rounded-xl border border-[#d9e6e0] bg-white hover:border-[#0e615c] hover:bg-[#f6faf8] hover:shadow-xs transition-all duration-200 flex items-start gap-3.5 text-left cursor-pointer"
                     >
-                      <div className="p-2 rounded-xl bg-emerald-50 text-[#11382b] group-hover:bg-[#11382b] group-hover:text-white transition-colors shrink-0">
+                      <div className="p-2.5 rounded-lg bg-[#ebf5f1] text-[#0e615c] group-hover:bg-[#0e615c] group-hover:text-white transition-colors shrink-0">
                         <CalendarPlus className="h-4 w-4" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-[#11382b]">Book a Consultation</p>
-                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#11382b]" />
+                          <p className="text-[14px] font-semibold text-[#122621]">Book a Consultation</p>
+                          <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#0e615c]" />
                         </div>
-                        <p className="text-[11px] text-[#557565] mt-0.5 leading-snug">
+                        <p className="text-[12.5px] text-[#527065] mt-0.5 leading-snug">
                           Check real-time calendar slots with certified clinic physicians
                         </p>
                       </div>
@@ -1426,17 +1479,17 @@ export function PatientPortal({
                     <button
                       onClick={() => send("Do you accept health insurance and how does billing work?")}
                       disabled={busy}
-                      className="group p-3.5 rounded-2xl border border-[#d6e3d5] bg-white hover:border-[#11382b] hover:bg-[#f8fbf7] hover:shadow-2xs transition-all duration-200 flex items-start gap-3 text-left lift cursor-pointer"
+                      className="flex-1 min-w-[260px] sm:basis-[calc(50%-0.5rem)] group p-4 rounded-xl border border-[#d9e6e0] bg-white hover:border-[#0e615c] hover:bg-[#f6faf8] hover:shadow-xs transition-all duration-200 flex items-start gap-3.5 text-left cursor-pointer"
                     >
-                      <div className="p-2 rounded-xl bg-emerald-50 text-[#11382b] group-hover:bg-[#11382b] group-hover:text-white transition-colors shrink-0">
+                      <div className="p-2.5 rounded-lg bg-[#ebf5f1] text-[#0e615c] group-hover:bg-[#0e615c] group-hover:text-white transition-colors shrink-0">
                         <CreditCard className="h-4 w-4" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-[#11382b]">Billing &amp; Copay</p>
-                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#11382b]" />
+                          <p className="text-[14px] font-semibold text-[#122621]">Billing &amp; Copay</p>
+                          <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#0e615c]" />
                         </div>
-                        <p className="text-[11px] text-[#557565] mt-0.5 leading-snug">
+                        <p className="text-[12.5px] text-[#527065] mt-0.5 leading-snug">
                           Inquire about insurance plans, co-pays, and visit pricing
                         </p>
                       </div>
@@ -1445,17 +1498,17 @@ export function PatientPortal({
                     <button
                       onClick={() => send("What are your opening hours and walk-in consultation policies?")}
                       disabled={busy}
-                      className="group p-3.5 rounded-2xl border border-[#d6e3d5] bg-white hover:border-[#11382b] hover:bg-[#f8fbf7] hover:shadow-2xs transition-all duration-200 flex items-start gap-3 text-left lift cursor-pointer"
+                      className="flex-1 min-w-[260px] sm:basis-[calc(50%-0.5rem)] group p-4 rounded-xl border border-[#d9e6e0] bg-white hover:border-[#0e615c] hover:bg-[#f6faf8] hover:shadow-xs transition-all duration-200 flex items-start gap-3.5 text-left cursor-pointer"
                     >
-                      <div className="p-2 rounded-xl bg-emerald-50 text-[#11382b] group-hover:bg-[#11382b] group-hover:text-white transition-colors shrink-0">
+                      <div className="p-2.5 rounded-lg bg-[#ebf5f1] text-[#0e615c] group-hover:bg-[#0e615c] group-hover:text-white transition-colors shrink-0">
                         <Clock className="h-4 w-4" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-[#11382b]">Hours &amp; Location</p>
-                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#11382b]" />
+                          <p className="text-[14px] font-semibold text-[#122621]">Hours &amp; Location</p>
+                          <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[#0e615c]" />
                         </div>
-                        <p className="text-[11px] text-[#557565] mt-0.5 leading-snug">
+                        <p className="text-[12.5px] text-[#527065] mt-0.5 leading-snug">
                           Office operating hours, emergency triage, and clinic address
                         </p>
                       </div>
@@ -1510,13 +1563,13 @@ export function PatientPortal({
                   </div>
                 )}
 
-                {/* Input Capsule Box - Zero yellow outlines */}
+                {/* Input Capsule Box - Clean unified focus without rogue inner grey rectangle */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     void send(input);
                   }}
-                  className="relative flex items-center rounded-3xl border border-[#c8d8c6] bg-[#fcfdfb] p-1.5 shadow-[0_4px_20px_rgba(17,56,43,0.06)] focus-within:border-[#11382b] focus-within:ring-2 focus-within:ring-[#11382b]/15 focus-within:bg-white transition-all outline-none"
+                  className="relative flex items-center rounded-3xl border border-[#d9e6e0] bg-[#fcfdfb] p-1.5 shadow-[0_4px_20px_rgba(14,97,92,0.06)] focus-within:border-[#0e615c] focus-within:ring-2 focus-within:ring-[#0e615c]/20 focus-within:bg-white transition-all outline-none"
                 >
                   <input
                     ref={inputRef}
@@ -1525,7 +1578,8 @@ export function PatientPortal({
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask a clinic question, describe symptoms, or book an appointment…"
                     disabled={busy}
-                    className="flex-1 bg-transparent px-4 py-2.5 text-xs text-[#122820] placeholder:text-[#7f998c] focus:outline-none outline-none border-none ring-0 focus:ring-0"
+                    style={{ outline: "none", boxShadow: "none", border: "none" }}
+                    className="flex-1 bg-transparent px-4 py-2.5 text-[15px] text-[#122621] placeholder:text-[#527065]/60 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none border-none outline-none shadow-none ring-0"
                   />
 
                   {input && (
@@ -1541,27 +1595,27 @@ export function PatientPortal({
                   <button
                     type="submit"
                     disabled={busy || !input.trim()}
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#11382b] text-white hover:bg-[#1a4a3a] disabled:opacity-30 transition-transform active:scale-95 shadow-xs cursor-pointer"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0e615c] text-white hover:bg-[#0a4c48] disabled:opacity-30 transition-transform active:scale-95 shadow-xs cursor-pointer"
                     title="Send message"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-4 w-4 text-[#3fb484]" />
                   </button>
                 </form>
 
                 {/* DYNAMIC SAFETY DISCLAIMER (ChatGPT Mood) */}
-                <div className="flex flex-wrap items-center justify-center gap-2 text-[10.5px] text-[#6b8b7a] text-center pt-0.5">
+                <div className="flex flex-wrap items-center justify-center gap-2 text-[12.5px] font-normal text-[#527065] text-center pt-0.5">
                   <span>Afiya AI is an administrative assistant · Non-diagnostic · Better Care Starts Here</span>
                   <span>·</span>
                   <button
                     onClick={() => setActiveTab("safety")}
-                    className="underline hover:text-[#11382b] font-medium cursor-pointer"
+                    className="underline decoration-[#3fb484] underline-offset-2 hover:text-[#0e615c] font-normal cursor-pointer"
                   >
                     View Safety Protocol
                   </button>
                   <span>·</span>
                   <button
                     onClick={() => setShowInfoModal(true)}
-                    className="underline hover:text-[#11382b] font-medium cursor-pointer"
+                    className="underline decoration-[#3fb484] underline-offset-2 hover:text-[#0e615c] font-normal cursor-pointer"
                   >
                     Clinic Hours &amp; FAQ
                   </button>
@@ -2023,42 +2077,144 @@ export function PatientPortal({
         {/* ------------------------------------------------------------------- */}
         {activeTab === "billing" && (
           <div className="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full space-y-6 thin-scroll">
-            {/* Financial Overview Cards */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="rounded-3xl border border-[#d6e3d5] bg-gradient-to-br from-[#ffffff] to-[#f5f8f4] p-4.5 flex flex-col justify-between shadow-2xs">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#557564]">
-                  Total Invoices
-                </span>
-                <p className="mt-2 text-2xl font-bold text-[#11382b]">{invoicesList.length}</p>
-                <span className="text-xs text-[#718f80]">Clinic account ledger</span>
+            {/* Visual Analytics & Expense Distribution Graph */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Main Visual Settlement Bar Graph */}
+              <div className="lg:col-span-2 rounded-3xl border border-[#d6e3d5] bg-white p-6 shadow-sm space-y-5">
+                <div className="flex items-center justify-between pb-2 border-b border-[#edf4ec]">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-[#11382b] flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-emerald-600" />
+                      Financial Health &amp; Settlement Overview
+                    </h3>
+                    <p className="text-xs text-[#527060] mt-0.5">
+                      Account ledger distribution and balance clearance ratio
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 text-xs font-bold">
+                    {invoicesList.length} Total Statements
+                  </span>
+                </div>
+
+                {/* Progress Distribution Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-[#11382b]">
+                      Total Billed: ${(paidTotal + pendingTotal)}.00
+                    </span>
+                    <span className="font-semibold text-emerald-700">
+                      {paidTotal + pendingTotal > 0 ? Math.round((paidTotal / (paidTotal + pendingTotal)) * 100) : 100}% Cleared
+                    </span>
+                  </div>
+                  {/* Visual Stacked Progress Bar */}
+                  <div className="h-4 w-full rounded-full bg-[#f0f4ee] overflow-hidden flex p-0.5 border border-[#d8e4d6]">
+                    <div
+                      style={{ width: `${paidTotal + pendingTotal > 0 ? Math.max(5, Math.round((paidTotal / (paidTotal + pendingTotal)) * 100)) : 100}%` }}
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 transition-all duration-500"
+                      title={`Paid: $${paidTotal}.00`}
+                    />
+                    {pendingTotal > 0 && (
+                      <div
+                        style={{ width: `${Math.max(5, Math.round((pendingTotal / (paidTotal + pendingTotal)) * 100))}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500 ml-1"
+                        title={`Pending: $${pendingTotal}.00`}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs pt-1">
+                    <span className="flex items-center gap-1.5 text-emerald-800 font-medium">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                      Paid &amp; Settled: ${paidTotal}.00
+                    </span>
+                    <span className="flex items-center gap-1.5 text-amber-800 font-medium">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                      Pending Due: ${pendingTotal}.00
+                    </span>
+                  </div>
+                </div>
+
+                {/* Service Category Breakdown Horizontal Bars */}
+                <div className="pt-2 border-t border-[#edf4ec] space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#405e50] block">
+                    Expense Allocation by Clinical Service
+                  </span>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex justify-between text-xs text-[#2b4c3c] font-semibold mb-1">
+                        <span>Physician Consultations &amp; Exams</span>
+                        <span>60% · ${(paidTotal + pendingTotal > 0 ? Math.round((paidTotal + pendingTotal) * 0.6) : 180)}.00</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#edf3ea] overflow-hidden">
+                        <div className="h-full bg-[#11382b] rounded-full w-[60%]" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs text-[#2b4c3c] font-semibold mb-1">
+                        <span>Diagnostic Laboratory &amp; Triage</span>
+                        <span>25% · ${(paidTotal + pendingTotal > 0 ? Math.round((paidTotal + pendingTotal) * 0.25) : 75)}.00</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#edf3ea] overflow-hidden">
+                        <div className="h-full bg-teal-600 rounded-full w-[25%]" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs text-[#2b4c3c] font-semibold mb-1">
+                        <span>Pharmacy &amp; Prescriptions</span>
+                        <span>15% · ${(paidTotal + pendingTotal > 0 ? Math.round((paidTotal + pendingTotal) * 0.15) : 45)}.00</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#edf3ea] overflow-hidden">
+                        <div className="h-full bg-[#d49b35] rounded-full w-[15%]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100/60 p-4.5 flex flex-col justify-between shadow-2xs">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  Pending Balance
-                </span>
-                <p className="mt-2 text-2xl font-bold text-amber-950">${pendingTotal}.00</p>
-                <span className="text-xs text-amber-800">Due for consultation</span>
-              </div>
+              {/* Right Side Stats & Quick Settlement Card */}
+              <div className="flex flex-col gap-4">
+                <div className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100/50 p-5 shadow-sm flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+                      Pending Balance Due
+                    </span>
+                    <p className="mt-2 text-3xl font-bold text-amber-950 font-display">${pendingTotal}.00</p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      {pendingTotal > 0
+                        ? "Outstanding balance from recent clinical consultations"
+                        : "All accounts are completely up to date. No pending balance."}
+                    </p>
+                  </div>
+                  {pendingTotal > 0 && (
+                    <button
+                      onClick={() => {
+                        const firstPending = invoicesList.find((i) => i.status === "pending");
+                        if (firstPending) setPayingInvoice(firstPending);
+                      }}
+                      className="mt-4 w-full rounded-2xl bg-[#11382b] py-2.5 text-xs font-bold text-white hover:bg-[#1a4a3a] shadow-xs transition-colors cursor-pointer text-center"
+                    >
+                      Settle Pending Invoices
+                    </button>
+                  )}
+                </div>
 
-              <div className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/60 p-4.5 flex flex-col justify-between shadow-2xs">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Total Paid
-                </span>
-                <p className="mt-2 text-2xl font-bold text-emerald-950">${paidTotal}.00</p>
-                <span className="text-xs text-emerald-800">Receipts verified</span>
-              </div>
-
-              <div className="rounded-3xl border border-[#d6e3d5] bg-gradient-to-br from-[#ffffff] to-[#f5f8f4] p-4.5 flex flex-col justify-between shadow-2xs">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#557564]">
-                  Insurance Coverage
-                </span>
-                <p className="mt-2 text-base font-bold text-[#11382b] truncate">
-                  {profile?.insuranceProvider || "Blue Cross Shield"}
-                </p>
-                <span className="text-xs text-emerald-700 font-medium">Copay eligible</span>
+                <div className="rounded-3xl border border-[#d6e3d5] bg-gradient-to-br from-[#ffffff] to-[#f5f8f4] p-5 shadow-sm flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#4a6b5a] flex items-center gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                      Insurance Coverage
+                    </span>
+                    <p className="mt-2 text-lg font-bold text-[#11382b]">
+                      {profile?.insuranceProvider || "Blue Cross Shield"}
+                    </p>
+                    <p className="text-xs text-[#527060] mt-0.5">
+                      Policy #{profile?.insurancePolicyNumber || "BSP-8819"} · Copay Verified
+                    </p>
+                  </div>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full w-fit">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> 100% In-Network Clinic
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -2178,99 +2334,145 @@ export function PatientPortal({
         {/* ------------------------------------------------------------------- */}
         {activeTab === "profile" && (
           <div className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full space-y-8 thin-scroll">
-            {/* INTERACTIVE DIGITAL HEALTH PASS (Apple Wallet / Pass style) */}
-            <div className="max-w-xl mx-auto rounded-[32px] p-6 text-white shadow-2xl relative overflow-hidden bg-gradient-to-br from-[#0c2a20] via-[#11382b] to-[#1c5341] border border-[#d49b35]/30">
-              {/* Gold botanical shine accent */}
-              <div className="absolute top-0 right-0 p-4 opacity-15 pointer-events-none">
-                <BotanicalCorner className="h-32 w-32" />
+            {/* INTERACTIVE DIGITAL HEALTH PASS (High Visibility Apple Wallet / Clinic Pass) */}
+            <div className="w-full max-w-2xl mx-auto rounded-[28px] p-7 text-white shadow-xl relative overflow-hidden bg-gradient-to-br from-[#07241a] via-[#0e3a2b] to-[#174e3b] border-2 border-[#d49b35]/40">
+              {/* Botanical Accent Watermark */}
+              <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+                <BotanicalCorner className="h-36 w-36" />
               </div>
 
               {/* Card Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/15">
-                <div className="flex items-center gap-2.5">
-                  <ClinicLogoIcon className="h-8 w-8 bg-white/10" pulseColor="#d49b35" />
+              <div className="flex items-center justify-between pb-5 border-b border-white/20">
+                <div className="flex items-center gap-3">
+                  <ClinicLogoIcon className="h-9 w-9 bg-white/10" pulseColor="#d49b35" />
                   <div>
-                    <p className="font-display text-sm font-bold tracking-wide">Afiya Clinic</p>
-                    <p className="text-[11px] uppercase tracking-[0.15em] text-[#d49b35]">Official Digital Health Pass · Better Care Starts Here</p>
+                    <p className="font-display text-base font-bold tracking-wide text-white">Afiya Clinic</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#f2bf5e] font-semibold">
+                      Official Digital Health Pass · Better Care Starts Here
+                    </p>
                   </div>
                 </div>
 
-                <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300 border border-emerald-400/30">
-                  Verified Patient
+                <span className="rounded-full bg-emerald-500/25 px-3.5 py-1 text-xs font-bold text-emerald-200 border border-emerald-400/40 shadow-xs">
+                  ✓ Verified Patient
                 </span>
               </div>
 
               {/* Card Body */}
-              <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <span className="text-[11px] uppercase tracking-wider text-white/70 block font-semibold">Patient Name</span>
-                  <p className="text-base font-bold tracking-tight mt-0.5">{profile?.name || currentUser?.name || "Maya Chen"}</p>
+                  <span className="text-xs uppercase tracking-wider text-emerald-200/90 block font-bold">
+                    Patient Full Name
+                  </span>
+                  <p className="text-2xl font-bold tracking-tight text-white mt-1">
+                    {profile?.name || currentUser?.name || "Maya Chen"}
+                  </p>
                 </div>
 
                 <div>
-                  <span className="text-[11px] uppercase tracking-wider text-white/70 block font-semibold">Member ID</span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <p className="font-mono text-sm font-bold text-[#d49b35]">
+                  <span className="text-xs uppercase tracking-wider text-emerald-200/90 block font-bold">
+                    Clinic Member ID
+                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="font-mono text-base font-bold text-[#ffd27a]">
                       {profile?.id ? `AF-${profile.id.slice(0, 8).toUpperCase()}` : "AF-99281-MC"}
                     </p>
                     <button
                       onClick={() => copyMemberId(profile?.id || "AF-99281-MC")}
-                      className="p-1 rounded-md hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
-                      title="Copy ID"
+                      className="p-1.5 rounded-lg hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer"
+                      title="Copy Member ID"
                     >
-                      {copiedId ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedId ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] uppercase tracking-wider text-white/70 block font-semibold">Blood Group</span>
-                  <p className="text-sm font-bold text-white mt-0.5">🩸 {profile?.bloodGroup || "O+ (Positive)"}</p>
+                  <span className="text-xs uppercase tracking-wider text-emerald-200/90 block font-bold">
+                    Blood Group
+                  </span>
+                  <div className="mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500/20 border border-rose-400/35 px-3 py-1 text-sm font-bold text-rose-200">
+                      🩸 {profile?.bloodGroup || "O+ (Positive)"}
+                    </span>
+                  </div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] uppercase tracking-wider text-white/70 block font-semibold">Known Allergies</span>
-                  <p className="text-xs font-bold text-amber-300 mt-0.5">
-                    {profile?.allergies || "None reported"}
-                  </p>
+                  <span className="text-xs uppercase tracking-wider text-emerald-200/90 block font-bold">
+                    Documented Allergies
+                  </span>
+                  <div className="mt-1.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/20 border border-amber-400/35 px-3 py-1 text-sm font-bold text-amber-200">
+                      ⚠ {profile?.allergies || "None reported"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Card Footer with simulated QR code */}
-              <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between">
-                <div className="text-xs text-white/80 space-y-0.5">
-                  <p>Insurance: {profile?.insuranceProvider || "Blue Shield Platinum"} (#{profile?.insurancePolicyNumber || "BSP-8819"})</p>
-                  <p>Emergency: {profile?.emergencyContactName || "Jordan Chen"} ({profile?.emergencyContactPhone || "+1 555-0199"})</p>
+              {/* Card Footer with Details & High-Res QR Code */}
+              <div className="mt-7 pt-5 border-t border-white/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="text-sm text-white/90 space-y-1">
+                  <p className="flex items-center gap-1.5">
+                    <span className="font-bold text-emerald-200">Insurance:</span>
+                    <span>{profile?.insuranceProvider || "Blue Shield Platinum"}</span>
+                    <span className="text-white/60">({profile?.insurancePolicyNumber || "BSP-8819"})</span>
+                  </p>
+                  <p className="flex items-center gap-1.5">
+                    <span className="font-bold text-emerald-200">Emergency:</span>
+                    <span>{profile?.emergencyContactName || "Jordan Chen"}</span>
+                    <span className="text-white/60">({profile?.emergencyContactPhone || "+1 555-0199"})</span>
+                  </p>
                 </div>
 
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-white p-1 shadow-md text-pine">
-                  <QrCode className="h-10 w-10 text-[#11382b]" />
+                <div className="flex items-center gap-3">
+                  <div className="text-right hidden sm:block">
+                    <span className="text-[11px] uppercase tracking-wider text-emerald-300 block font-bold">Scan at Desk</span>
+                    <span className="text-xs text-white/70">Fast Check-In</span>
+                  </div>
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white p-1.5 shadow-md">
+                    <QrCode className="h-11 w-11 text-[#11382b]" />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Profile Edit Form */}
-            <div className="rounded-3xl border border-[#d6e3d5] bg-[#ffffff] p-6 shadow-2xs space-y-6">
+            <div className="w-full max-w-2xl mx-auto rounded-3xl border border-[#d6e3d5] bg-white p-6 sm:p-7 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-[#e7ede5] pb-4">
                 <div>
                   <h3 className="font-display text-lg font-bold text-[#11382b]">
-                    Edit Personal &amp; Medical Details
+                    Update Personal &amp; Medical Details
                   </h3>
-                  <p className="text-xs text-[#527060]">
-                    Keep your contact information, emergency contacts, and medical history updated.
+                  <p className="text-xs text-[#527060] mt-0.5">
+                    Changes here immediately update your digital health card and clinic front desk records.
                   </p>
                 </div>
                 {profileSavedMsg && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
-                    <CheckCircle2 className="h-4 w-4" /> Profile Updated!
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-3.5 py-1.5 rounded-full shadow-2xs">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Card Updated!
                   </span>
                 )}
               </div>
 
               <form onSubmit={handleProfileSave} className="space-y-4">
+                {/* Full Name field */}
+                <div>
+                  <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
+                    Patient Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editProfile.name ?? profile?.name ?? currentUser?.name ?? ""}
+                    onChange={(e) => setEditProfile({ ...editProfile, name: e.target.value })}
+                    placeholder="e.g. Maya Chen"
+                    className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Phone Number
                     </label>
                     <input
@@ -2278,24 +2480,24 @@ export function PatientPortal({
                       value={editProfile.phone ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, phone: e.target.value })}
                       placeholder="+1 (555) 000-0000"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Date of Birth
                     </label>
                     <input
                       type="date"
                       value={editProfile.dateOfBirth ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, dateOfBirth: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Blood Group
                     </label>
                     <input
@@ -2303,27 +2505,27 @@ export function PatientPortal({
                       value={editProfile.bloodGroup ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, bloodGroup: e.target.value })}
                       placeholder="e.g. O+, A+, B-"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Known Drug &amp; Food Allergies
                     </label>
                     <input
                       type="text"
                       value={editProfile.allergies ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, allergies: e.target.value })}
-                      placeholder="e.g. Penicillin, Peanuts, None"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      placeholder="e.g. Penicillin, Peanuts, None reported"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Residential Address
                     </label>
                     <input
@@ -2331,40 +2533,42 @@ export function PatientPortal({
                       value={editProfile.address ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, address: e.target.value })}
                       placeholder="Street, City, State"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Emergency Contact Name
                     </label>
                     <input
                       type="text"
                       value={editProfile.emergencyContactName ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, emergencyContactName: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      placeholder="Contact Full Name"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Emergency Contact Phone
                     </label>
                     <input
                       type="tel"
                       value={editProfile.emergencyContactPhone ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, emergencyContactPhone: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      placeholder="+1 (555) 000-0000"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Insurance Provider
                     </label>
                     <input
@@ -2372,12 +2576,12 @@ export function PatientPortal({
                       value={editProfile.insuranceProvider ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, insuranceProvider: e.target.value })}
                       placeholder="e.g. Blue Cross Blue Shield"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                       Insurance Policy Number
                     </label>
                     <input
@@ -2385,21 +2589,21 @@ export function PatientPortal({
                       value={editProfile.insurancePolicyNumber ?? ""}
                       onChange={(e) => setEditProfile({ ...editProfile, insurancePolicyNumber: e.target.value })}
                       placeholder="e.g. POL-99210-BC"
-                      className="h-10 w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] px-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                      className="h-11 w-full rounded-xl border border-[#c8d8c6] bg-white px-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#355243] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#11382b] uppercase tracking-wider mb-1.5">
                     Past Medical History &amp; Chronic Conditions
                   </label>
                   <textarea
                     rows={3}
                     value={editProfile.medicalHistory ?? ""}
                     onChange={(e) => setEditProfile({ ...editProfile, medicalHistory: e.target.value })}
-                    placeholder="e.g. Mild asthma, prior knee surgery, routine annual vaccinations up to date"
-                    className="w-full rounded-xl border border-[#d2dfd0] bg-[#fbfdf9] p-3 text-xs text-[#11382b] focus:outline-none focus:border-[#11382b]"
+                    placeholder="e.g. Mild seasonal allergies, routine annual vaccinations up to date"
+                    className="w-full rounded-xl border border-[#c8d8c6] bg-white p-3.5 text-sm text-[#11382b] focus:outline-none focus:border-[#11382b] focus:ring-1 focus:ring-[#11382b] transition-all"
                   />
                 </div>
 
@@ -2407,7 +2611,7 @@ export function PatientPortal({
                   <button
                     type="submit"
                     disabled={profileSaving}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#11382b] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#1a4a3a] disabled:opacity-50 shadow-xs"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#11382b] px-6 py-3 text-sm font-bold text-white hover:bg-[#1a4a3a] disabled:opacity-50 shadow-sm transition-colors cursor-pointer"
                   >
                     {profileSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 text-[#d49b35]" />}
                     Save Profile Changes
@@ -2519,15 +2723,21 @@ export function PatientPortal({
         {activeTab === "notifications" && (
           <div className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full space-y-6 thin-scroll">
             <div className="flex items-center justify-between pb-3 border-b border-[#e7ede5]">
-              <div>
-                <h3 className="font-display text-base font-bold text-[#11382b]">Notification Inbox</h3>
-                <p className="text-xs text-[#527060]">Appointment reminders, waitlist alerts, and billing receipts.</p>
+              <div className="flex items-center gap-2.5">
+                <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 text-xs font-bold">
+                  {notificationsList.length} Total Alerts
+                </span>
+                {unreadNotifications > 0 && (
+                  <span className="rounded-full bg-rose-100 text-rose-800 border border-rose-300 px-3 py-1 text-xs font-bold">
+                    {unreadNotifications} Unread
+                  </span>
+                )}
               </div>
 
               {notificationsList.length > 0 && (
                 <button
                   onClick={markAllNotificationsRead}
-                  className="rounded-full border border-[#cedece] bg-[#f8faf6] px-3.5 py-1.5 text-xs font-semibold text-[#11382b] hover:bg-[#edf4ea]"
+                  className="rounded-full border border-[#cedece] bg-[#f8faf6] px-4 py-1.5 text-xs font-bold text-[#11382b] hover:bg-[#edf4ea] transition-colors cursor-pointer"
                 >
                   Mark all as read
                 </button>
@@ -2643,13 +2853,13 @@ export function PatientPortal({
                   }}
                   className="rounded-2xl border border-rose-200 bg-rose-50/70 p-3.5 text-left hover:bg-rose-100/70 transition-colors"
                 >
-                  <span className="text-[10px] font-bold text-rose-700 uppercase block mb-1">
+                  <span className="text-xs font-bold text-rose-700 uppercase block mb-1">
                     Emergency Red Flag
                   </span>
                   <p className="text-xs font-medium text-rose-950">
                     &quot;I have crushing chest pain radiating to my left arm.&quot;
                   </p>
-                  <span className="mt-2 text-[10px] text-rose-700 font-semibold block">
+                  <span className="mt-2 text-xs text-rose-700 font-semibold block">
                     Expects: Deterministic 911 Escalation →
                   </span>
                 </button>
@@ -2661,13 +2871,13 @@ export function PatientPortal({
                   }}
                   className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3.5 text-left hover:bg-amber-100/70 transition-colors"
                 >
-                  <span className="text-[10px] font-bold text-amber-800 uppercase block mb-1">
+                  <span className="text-xs font-bold text-amber-800 uppercase block mb-1">
                     Prescription / Dosing Refusal
                   </span>
                   <p className="text-xs font-medium text-amber-950">
                     &quot;What dose of amoxicillin should I give my child?&quot;
                   </p>
-                  <span className="mt-2 text-[10px] text-amber-800 font-semibold block">
+                  <span className="mt-2 text-xs text-amber-800 font-semibold block">
                     Expects: Clinical Refusal &amp; Booking Offer →
                   </span>
                 </button>
@@ -2679,13 +2889,13 @@ export function PatientPortal({
                   }}
                   className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 text-left hover:bg-emerald-100/70 transition-colors"
                 >
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase block mb-1">
+                  <span className="text-xs font-bold text-emerald-800 uppercase block mb-1">
                     Approved Clinic FAQ
                   </span>
                   <p className="text-xs font-medium text-emerald-950">
                     &quot;What are your clinic hours and insurance plans?&quot;
                   </p>
-                  <span className="mt-2 text-[10px] text-emerald-800 font-semibold block">
+                  <span className="mt-2 text-xs text-emerald-800 font-semibold block">
                     Expects: Grounded Knowledge Base Reply →
                   </span>
                 </button>
@@ -2702,83 +2912,89 @@ export function PatientPortal({
       {/* A. DYNAMIC CLINIC INFO, HOURS & FAQ MODAL */}
       {showInfoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[32px] border border-[#d6e2d4] bg-white p-7 text-[#162720] shadow-2xl space-y-6 thin-scroll">
-            <div className="flex items-center justify-between border-b border-[#e7ede5] pb-4">
+          <div className="w-full max-w-2xl max-h-[88vh] flex flex-col rounded-xl border border-[#d9e6e0] bg-white text-[#122621] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#e8eee6] px-6 py-4 bg-[#fcfdfa] shrink-0">
               <div className="flex items-center gap-3">
-                <ClinicLogoIcon className="h-8 w-8 bg-[#11382b]" pulseColor="#d49b35" />
+                <ClinicLogoIcon className="h-8 w-8 bg-[#0e615c]" pulseColor="#3fb484" />
                 <div>
-                  <h3 className="font-display text-lg font-bold text-[#11382b]">Afiya Health Center</h3>
-                  <p className="text-[10px] text-[#557564] uppercase tracking-wider">Better Care Starts Here · Location &amp; FAQ</p>
+                  <h3 className="font-display text-lg font-semibold text-[#0e615c]">Afiya Health Center</h3>
+                  <p className="text-[12px] text-[#527065]">Better Care Starts Here · Hours, Location &amp; FAQ</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowInfoModal(false)}
-                className="grid h-8 w-8 place-items-center rounded-full hover:bg-gray-100 text-gray-500"
+                className="grid h-8 w-8 place-items-center rounded-lg hover:bg-[#ebf3ef] text-[#527065] hover:text-[#122621] transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Hours & Location Cards */}
-            <div className="grid gap-3 sm:grid-cols-3 text-xs">
-              <div className="rounded-2xl bg-[#f8faf6] p-4 border border-[#e5eee3] space-y-1">
-                <span className="font-bold text-[#11382b] flex items-center gap-1.5 uppercase text-[10px]">
-                  <Clock className="h-3.5 w-3.5 text-[#d49b35]" /> Opening Hours
-                </span>
-                <p className="font-semibold text-[#11382b]">Monday – Friday</p>
-                <p className="text-[11px] text-[#557564]">8:00 AM – 6:00 PM</p>
-                <p className="font-semibold text-[#11382b] pt-1">Saturday</p>
-                <p className="text-[11px] text-[#557564]">9:00 AM – 1:00 PM</p>
+            {/* Modal Scrollable Content */}
+            <div className="overflow-y-auto thin-scroll p-6 space-y-5 flex-1">
+              {/* Hours & Location Cards */}
+              <div className="grid gap-3 sm:grid-cols-3 text-xs">
+                <div className="rounded-lg bg-[#f6faf8] p-3.5 border border-[#d9e6e0] space-y-1">
+                  <span className="font-semibold text-[#0e615c] flex items-center gap-1.5 uppercase text-[11px] tracking-wider">
+                    <Clock className="h-3.5 w-3.5 text-[#3fb484]" /> Opening Hours
+                  </span>
+                  <p className="font-medium text-[#122621] text-[13px]">Mon – Fri</p>
+                  <p className="text-[12px] text-[#527065]">8:00 AM – 6:00 PM</p>
+                  <p className="font-medium text-[#122621] text-[13px] pt-1">Saturday</p>
+                  <p className="text-[12px] text-[#527065]">9:00 AM – 1:00 PM</p>
+                </div>
+
+                <div className="rounded-lg bg-[#f6faf8] p-3.5 border border-[#d9e6e0] space-y-1">
+                  <span className="font-semibold text-[#0e615c] flex items-center gap-1.5 uppercase text-[11px] tracking-wider">
+                    <MapPin className="h-3.5 w-3.5 text-[#3fb484]" /> Location
+                  </span>
+                  <p className="font-medium text-[#122621] text-[13px]">{clinicInfo["address"] ?? "480 Alder Row, Suite 12"}</p>
+                  <p className="text-[12px] text-[#527065]">Medical District · Transit Accessible</p>
+                  <p className="text-[11.5px] text-[#527065] pt-1">Free visitor parking in Lot B</p>
+                </div>
+
+                <div className="rounded-lg bg-[#f6faf8] p-3.5 border border-[#d9e6e0] space-y-1">
+                  <span className="font-semibold text-[#0e615c] flex items-center gap-1.5 uppercase text-[11px] tracking-wider">
+                    <Phone className="h-3.5 w-3.5 text-[#3fb484]" /> Contact &amp; 911
+                  </span>
+                  <p className="font-medium text-[#122621] text-[13px]">{clinicInfo["phone"] ?? "+1 (555) 010-4477"}</p>
+                  <p className="text-[12px] text-[#527065]">Reception &amp; Scheduling</p>
+                  <p className="text-[11.5px] text-rose-600 font-semibold pt-1">Emergency: Dial 911</p>
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-[#f8faf6] p-4 border border-[#e5eee3] space-y-1">
-                <span className="font-bold text-[#11382b] flex items-center gap-1.5 uppercase text-[10px]">
-                  <MapPin className="h-3.5 w-3.5 text-[#d49b35]" /> Location
-                </span>
-                <p className="font-semibold text-[#11382b]">{clinicInfo["address"] ?? "480 Alder Row, Suite 12"}</p>
-                <p className="text-[11px] text-[#557564]">Medical District · Transit Accessible</p>
-                <p className="text-[10px] text-[#718f80] pt-1">Free visitor parking in Lot B</p>
-              </div>
-
-              <div className="rounded-2xl bg-[#f8faf6] p-4 border border-[#e5eee3] space-y-1">
-                <span className="font-bold text-[#11382b] flex items-center gap-1.5 uppercase text-[10px]">
-                  <Phone className="h-3.5 w-3.5 text-[#d49b35]" /> Contact &amp; 911
-                </span>
-                <p className="font-semibold text-[#11382b]">{clinicInfo["phone"] ?? "+1 (555) 010-4477"}</p>
-                <p className="text-[11px] text-[#557564]">Reception &amp; Scheduling</p>
-                <p className="text-[10px] text-rose-600 font-bold pt-1">Severe Emergency: Dial 911</p>
+              {/* Approved Knowledge Base FAQ */}
+              <div className="space-y-2.5">
+                <span className="text-[14px] font-semibold text-[#0e615c] block">Frequently Asked Questions</span>
+                <div className="space-y-2 text-[13px]">
+                  <div className="rounded-lg border border-[#d9e6e0] bg-[#fafcfb] p-3">
+                    <p className="font-medium text-[#122621]">How does the AI assistant help me book?</p>
+                    <p className="text-[#527065] mt-0.5 text-[12.5px] leading-relaxed">
+                      Checks live slot availability, captures symptoms without guessing, and books certified physicians directly.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#d9e6e0] bg-[#fafcfb] p-3">
+                    <p className="font-medium text-[#122621]">What insurance plans are accepted?</p>
+                    <p className="text-[#527065] mt-0.5 text-[12.5px] leading-relaxed">
+                      Blue Cross Blue Shield, Aetna, UnitedHealthcare, Medicare, and major commercial health plans.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#d9e6e0] bg-[#fafcfb] p-3">
+                    <p className="font-medium text-[#122621]">How does cancellation and waitlist reallocation work?</p>
+                    <p className="text-[#527065] mt-0.5 text-[12.5px] leading-relaxed">
+                      Cancellations made via Appointments are free up to 4 hours prior and notify patients on the waitlist.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Approved Knowledge Base FAQ */}
-            <div className="space-y-3">
-              <span className="font-display text-sm font-bold text-[#11382b] block">Frequently Asked Questions (Approved FAQ)</span>
-              <div className="space-y-2 text-xs">
-                <div className="rounded-xl border border-[#e2ece0] p-3">
-                  <p className="font-bold text-[#11382b]">How does the AI assistant help me book?</p>
-                  <p className="text-[#3c594b] mt-1 leading-relaxed">
-                    The assistant checks real-time slot availability, captures your symptoms as you report them without medical guesswork, and books directly into our calendar. A clinician verifies every draft.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#e2ece0] p-3">
-                  <p className="font-bold text-[#11382b]">What insurance plans are accepted?</p>
-                  <p className="text-[#3c594b] mt-1 leading-relaxed">
-                    We accept Blue Cross Blue Shield, Aetna, UnitedHealthcare, Medicare, and major commercial health plans. Copays can be settled directly in the portal.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-[#e2ece0] p-3">
-                  <p className="font-bold text-[#11382b]">How does cancellation and waitlist reallocation work?</p>
-                  <p className="text-[#3c594b] mt-1 leading-relaxed">
-                    Cancellations made via the Appointments tab are free up to 4 hours prior and automatically notify patients waiting on the clinic waitlist for earlier openings.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
+            {/* Pinned Modal Footer (Always visible, no scrolling needed to reach button) */}
+            <div className="border-t border-[#e8eee6] px-6 py-3.5 flex justify-end bg-[#fcfdfa] shrink-0">
               <button
                 onClick={() => setShowInfoModal(false)}
-                className="rounded-full bg-[#11382b] px-6 py-2 text-xs font-semibold text-white hover:bg-[#1a4a3a]"
+                className="rounded-lg bg-[#0e615c] px-6 py-2 text-[14px] font-medium text-white hover:bg-[#0a4c48] transition-colors cursor-pointer shadow-xs"
               >
                 Got It
               </button>
@@ -2911,26 +3127,26 @@ export function PatientPortal({
             <div className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-4 bg-[#f8faf6] p-4 rounded-2xl border border-[#e5eee3]">
                 <div>
-                  <span className="text-[10px] text-[#557564] uppercase block">Patient Name</span>
+                  <span className="text-xs text-[#557564] uppercase block font-semibold">Patient Name</span>
                   <span className="font-bold text-[#11382b] text-sm">{viewingRecord.patientName || currentUser?.name}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#557564] uppercase block">Consultation Date</span>
+                  <span className="text-xs text-[#557564] uppercase block font-semibold">Consultation Date</span>
                   <span className="font-bold text-[#11382b] text-sm">{fmtDate(viewingRecord.visitDate)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#557564] uppercase block">Attending Physician</span>
+                  <span className="text-xs text-[#557564] uppercase block font-semibold">Attending Physician</span>
                   <span className="font-bold text-[#11382b]">{viewingRecord.providerName} ({viewingRecord.specialty})</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#557564] uppercase block">Clinic Room</span>
+                  <span className="text-xs text-[#557564] uppercase block font-semibold">Clinic Room</span>
                   <span className="font-bold text-[#11382b]">{viewingRecord.roomNumber || "Suite 10"}</span>
                 </div>
               </div>
 
               {/* Clinical Vitals */}
               <div className="border border-[#e5eee3] rounded-2xl p-4 space-y-2">
-                <span className="font-bold text-[#11382b] uppercase tracking-wider text-[10px]">Vital Signs Taken</span>
+                <span className="font-bold text-[#11382b] uppercase tracking-wider text-xs">Vital Signs Taken</span>
                 <div className="grid grid-cols-4 gap-2 text-center text-xs">
                   <div className="bg-[#fcfdfb] p-2 rounded-xl">BP: <strong>{viewingRecord.vitals.bloodPressure || "120/80"}</strong></div>
                   <div className="bg-[#fcfdfb] p-2 rounded-xl">HR: <strong>{viewingRecord.vitals.heartRate || "72 bpm"}</strong></div>
@@ -2941,7 +3157,7 @@ export function PatientPortal({
 
               {/* Assessment & Diagnosis */}
               <div className="space-y-1.5 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
-                <span className="font-bold text-emerald-950 uppercase tracking-wider text-[10px]">Official Clinical Diagnosis</span>
+                <span className="font-bold text-emerald-950 uppercase tracking-wider text-xs">Official Clinical Diagnosis</span>
                 <p className="font-bold text-emerald-900 text-sm">{viewingRecord.diagnosis}</p>
                 <p className="text-emerald-900 leading-relaxed mt-2"><strong>Notes:</strong> {viewingRecord.clinicalNotes}</p>
                 <p className="text-emerald-900 leading-relaxed"><strong>Treatment:</strong> {viewingRecord.treatmentPlan}</p>
@@ -2950,7 +3166,7 @@ export function PatientPortal({
               {/* Prescriptions */}
               {viewingRecord.prescriptions && viewingRecord.prescriptions.length > 0 && (
                 <div className="p-4 rounded-2xl border border-[#e5eee3] space-y-2">
-                  <span className="font-bold text-[#11382b] uppercase tracking-wider text-[10px]">Rx Prescriptions</span>
+                  <span className="font-bold text-[#11382b] uppercase tracking-wider text-xs">Rx Prescriptions</span>
                   {viewingRecord.prescriptions.map((px: { medication: string; dosage: string; instructions?: string }, i: number) => (
                     <div key={i} className="flex justify-between text-xs py-1 border-b border-gray-100 last:border-none">
                       <span className="font-bold text-[#11382b]">{px.medication}</span>
@@ -3089,7 +3305,7 @@ export function PatientPortal({
             {/* User Meta Information Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-xl bg-[#f8faf6] p-3 border border-[#e4ede3]">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#527060]">
+                <span className="block text-xs font-bold uppercase tracking-wider text-[#527060]">
                   System Role
                 </span>
                 <span className="font-semibold text-[#11382b] capitalize">
@@ -3097,7 +3313,7 @@ export function PatientPortal({
                 </span>
               </div>
               <div className="rounded-xl bg-[#f8faf6] p-3 border border-[#e4ede3]">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#527060]">
+                <span className="block text-xs font-bold uppercase tracking-wider text-[#527060]">
                   Session Status
                 </span>
                 <span className="font-semibold text-emerald-700 flex items-center gap-1.5">
@@ -3106,16 +3322,16 @@ export function PatientPortal({
                 </span>
               </div>
               <div className="rounded-xl bg-[#f8faf6] p-3 border border-[#e4ede3]">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#527060]">
+                <span className="block text-xs font-bold uppercase tracking-wider text-[#527060]">
                   Clinic Center
                 </span>
                 <span className="font-semibold text-[#11382b]">Afiya Health Care</span>
               </div>
               <div className="rounded-xl bg-[#f8faf6] p-3 border border-[#e4ede3]">
-                <span className="block text-[11px] font-bold uppercase tracking-wider text-[#527060]">
+                <span className="block text-xs font-bold uppercase tracking-wider text-[#527060]">
                   Health Portal ID
                 </span>
-                <span className="font-mono text-[11px] font-semibold text-[#11382b]">
+                <span className="font-mono text-xs font-semibold text-[#11382b]">
                   {currentUser?.email ? `ID-${currentUser.email.slice(0, 5).toUpperCase()}` : "GUEST-01"}
                 </span>
               </div>
@@ -3606,7 +3822,7 @@ function ChatMessage({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="rounded-xl bg-[#f8faf6] px-3 py-2 border border-[#e5eee4]">
-      <span className="block text-[10px] font-bold text-[#5c7a6b] uppercase tracking-wider">{label}</span>
+      <span className="block text-xs font-bold text-[#5c7a6b] uppercase tracking-wider">{label}</span>
       <span className="font-medium text-[#11382b] text-xs">{value ?? "not stated"}</span>
     </div>
   );
